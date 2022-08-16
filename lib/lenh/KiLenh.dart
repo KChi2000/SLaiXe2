@@ -15,6 +15,8 @@ class KiLenh extends StatefulWidget {
 }
 
 class _KiLenhState extends State<KiLenh> {
+  bool checkError= false;
+  final formkey = GlobalKey<FormState>();
   TimeOfDay time = TimeOfDay.now();
   TimeOfDay timetemp = TimeOfDay.now();
   final timeController = TextEditingController(
@@ -41,6 +43,12 @@ class _KiLenhState extends State<KiLenh> {
     ChuyenDiTrongNgay('Thứ 7', '15/09/2022', '18/7', false)
   ];
   List<ChuyenDiTrongNgay> listCDTemp = [];
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    
+  }
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
@@ -110,7 +118,7 @@ class _KiLenhState extends State<KiLenh> {
                               child: Text(text,
                                   style: TextStyle(
                                       fontFamily: 'Roboto Regular',
-                                      fontSize: 16))),
+                                      fontSize: 14))),
                           value: text,
                         );
                       }).toList(),
@@ -173,7 +181,10 @@ class _KiLenhState extends State<KiLenh> {
                       inputFormatters: [],
                       onChanged: (value) {},
                     ),
-                    TextFormField(
+                    Form(
+                      key: formkey,
+                      child: Column(children: [
+                      TextFormField(
                       controller: tungayController,
                       decoration: InputDecoration(
                         isDense: true,
@@ -205,12 +216,21 @@ class _KiLenhState extends State<KiLenh> {
                       },
                       validator: (value) {
                         if (tungay.day<DateTime.now().day) {
+                          
+                            checkError = true;
+                      
                           return 'Ký từ ngày không được nhỏ hơn ngày hiện tại';
                         }
                         else if(tungay.day>denngay.day){
+                          
+                            checkError = true;
+                       
                           return 'Ký từ ngày không được nhỏ hơn Ký đến ngày';
                         }
                          else {
+                         
+                            checkError = false;
+                         
                           return null;
                         }
                       },
@@ -234,9 +254,9 @@ class _KiLenhState extends State<KiLenh> {
                             firstDate: DateTime(1900),
                             lastDate: DateTime(3000));
                         if (denngay == null) {
-                          setState(() {
+                         
                             denngay = denngaytemp;
-                          });
+                       
                         } else {
                           denngaytemp = denngay;
                         }
@@ -247,13 +267,20 @@ class _KiLenhState extends State<KiLenh> {
                       },
                       validator: (value) {
                         if(denngay.day < tungay.day){
+                        
+                            checkError = true;
+                         
                           return 'Ký đến ngày không được nhỏ hơn Ký từ ngày';
                         }
                         
                         else{
+                         
+                            checkError = false;
+                      
                           return null;}
                       },
                     ),
+                    ],)),
                     SizedBox(
                       height: 15,
                     ),
@@ -300,11 +327,10 @@ class _KiLenhState extends State<KiLenh> {
                   ),
                 ),
                 ElevatedButton(
-                    onPressed: listCDTemp.length == 0
-                        ? null
-                        : () {
+                    onPressed:!checkError&& listCDTemp.length !=0? () {
+                          
                             print(tungay.day<DateTime.now().day);
-                          },
+                          }:null,
                     child: Text(
                       'KÝ LỆNH (${listCDTemp.length})',
                       style: TextStyle(
@@ -342,7 +368,7 @@ class _KiLenhState extends State<KiLenh> {
         Container(
           padding: EdgeInsets.all(10),
           width: size.width * 0.7,
-          margin: EdgeInsets.only(bottom: 15),
+          margin: EdgeInsets.only(top: 15),
           decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(5),
