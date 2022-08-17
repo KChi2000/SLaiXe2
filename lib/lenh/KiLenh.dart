@@ -15,7 +15,7 @@ class KiLenh extends StatefulWidget {
 }
 
 class _KiLenhState extends State<KiLenh> {
-  bool checkError= false;
+  bool checkError = false;
   final formkey = GlobalKey<FormState>();
   TimeOfDay time = TimeOfDay.now();
   TimeOfDay timetemp = TimeOfDay.now();
@@ -47,8 +47,8 @@ class _KiLenhState extends State<KiLenh> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    
   }
+
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
@@ -182,105 +182,101 @@ class _KiLenhState extends State<KiLenh> {
                       onChanged: (value) {},
                     ),
                     Form(
-                      key: formkey,
-                      child: Column(children: [
-                      TextFormField(
-                      controller: tungayController,
-                      decoration: InputDecoration(
-                        isDense: true,
-                        labelText: 'Từ ngày(*)',
-                        suffixIcon: Icon(
-                          Icons.calendar_month,
-                          size: 24,
-                        ),
-                      ),
-                      autovalidateMode: AutovalidateMode.onUserInteraction,
-                      onTap: () async {
-                        FocusScope.of(context).requestFocus(new FocusNode());
-                        tungay = await showDatePicker(
-                            context: context,
-                            initialDate: tungaytemp,
-                            firstDate: DateTime(1900),
-                            lastDate: DateTime(3000));
-                        if (tungay == null) {
-                          setState(() {
-                            tungay = tungaytemp;
-                          });
-                        } else {
-                          tungaytemp = tungay;
-                        }
-                        setState(() {
-                          tungayController.text =
-                              DateFormat('dd-MM-yyyy').format(tungay);
-                        });
-                      },
-                      validator: (value) {
-                        if (tungay.day<DateTime.now().day) {
-                          
-                            checkError = true;
-                      
-                          return 'Ký từ ngày không được nhỏ hơn ngày hiện tại';
-                        }
-                        else if(tungay.day>denngay.day){
-                          
-                            checkError = true;
-                       
-                          return 'Ký từ ngày không được nhỏ hơn Ký đến ngày';
-                        }
-                         else {
-                         
-                            checkError = false;
-                         
-                          return null;
-                        }
-                      },
-                    ),
-                    TextFormField(
-                      controller: denngayController,
-                      decoration: InputDecoration(
-                        isDense: true,
-                        labelText: 'Đến ngày(*)',
-                        suffixIcon: Icon(
-                          Icons.calendar_month,
-                          size: 24,
-                        ),
-                      ),
-                      autovalidateMode: AutovalidateMode.onUserInteraction,
-                      onTap: () async {
-                        FocusScope.of(context).requestFocus(new FocusNode());
-                        denngay = await showDatePicker(
-                            context: context,
-                            initialDate: denngaytemp,
-                            firstDate: DateTime(1900),
-                            lastDate: DateTime(3000));
-                        if (denngay == null) {
-                         
-                            denngay = denngaytemp;
-                       
-                        } else {
-                          denngaytemp = denngay;
-                        }
-                        setState(() {
-                          denngayController.text =
-                              DateFormat('dd-MM-yyyy').format(denngay);
-                        });
-                      },
-                      validator: (value) {
-                        if(denngay.day < tungay.day){
-                        
-                            checkError = true;
-                         
-                          return 'Ký đến ngày không được nhỏ hơn Ký từ ngày';
-                        }
-                        
-                        else{
-                         
-                            checkError = false;
-                      
-                          return null;}
-                      },
-                    ),
-                    ],)),
+                        key: formkey,
+                        child: Column(
+                          children: [
+                            TextFormField(
+                              controller: tungayController,
+                              decoration: InputDecoration(
+                                isDense: true,
+                                labelText: 'Từ ngày(*)',
+                                suffixIcon: Icon(
+                                  Icons.calendar_month,
+                                  size: 24,
+                                ),
+                              ),
+                              autovalidateMode:
+                                  AutovalidateMode.onUserInteraction,
+                              onTap: () async {
+                                FocusScope.of(context)
+                                    .requestFocus(new FocusNode());
+                                tungay = await showDatePicker(
+                                    context: context,
+                                    initialDate: tungaytemp,
+                                    firstDate: DateTime(1900),
+                                    lastDate: DateTime(3000));
+                                if (tungay == null) {
+                                  setState(() {
+                                    tungay = tungaytemp;
+                                  });
+                                } else {
+                                  tungaytemp = tungay;
+                                }
+                                setState(() {
+                                  tungayController.text =
+                                      DateFormat('dd-MM-yyyy').format(tungay);
+                                });
+                              },
+                              validator: (value) {
+                                if (tungay.day < DateTime.now().day) {
+                                  checkError = true;
+
+                                  return 'Ký từ ngày không được nhỏ hơn ngày hiện tại';
+                                } else if (tungay.day > denngay.day) {
+                                  checkError = true;
+
+                                  return 'Ký từ ngày không được nhỏ hơn Ký đến ngày';
+                                } else {
+                                  checkError = false;
+
+                                  return null;
+                                }
+                              },
+                            ),
+                            TextFormField(
+                              controller: denngayController,
+                              decoration: InputDecoration(
+                                isDense: true,
+                                labelText: 'Đến ngày(*)',
+                                suffixIcon: Icon(
+                                  Icons.calendar_month,
+                                  size: 24,
+                                ),
+                              ),
+                              autovalidateMode:
+                                  AutovalidateMode.onUserInteraction,
+                              onTap: () async {
+                                FocusScope.of(context)
+                                    .requestFocus(new FocusNode());
+                                denngay = await showDatePicker(
+                                    context: context,
+                                    initialDate: denngaytemp,
+                                    firstDate: DateTime(1900),
+                                    lastDate: DateTime(3000));
+                                if (denngay == null) {
+                                  denngay = denngaytemp;
+                                } else {
+                                  denngaytemp = denngay;
+                                }
+                                setState(() {
+                                  denngayController.text =
+                                      DateFormat('dd-MM-yyyy').format(denngay);
+                                });
+                              },
+                              validator: (value) {
+                                if (denngay.day < tungay.day) {
+                                  checkError = true;
+
+                                  return 'Ký đến ngày không được nhỏ hơn Ký từ ngày';
+                                } else {
+                                  checkError = false;
+
+                                  return null;
+                                }
+                              },
+                            ),
+                          ],
+                        )),
                     SizedBox(
                       height: 15,
                     ),
@@ -304,12 +300,12 @@ class _KiLenhState extends State<KiLenh> {
               ),
             ),
           ),
-          Divider(
-            thickness: 0.1,
-            color: Colors.black,
-          ),
           Container(
             padding: EdgeInsets.symmetric(horizontal: 25),
+            decoration: BoxDecoration(
+                border: Border(
+                    top: BorderSide(
+                        width: 1, color: Colors.grey.withOpacity(0.3)))),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -327,10 +323,11 @@ class _KiLenhState extends State<KiLenh> {
                   ),
                 ),
                 ElevatedButton(
-                    onPressed:!checkError&& listCDTemp.length !=0? () {
-                          
-                            print(tungay.day<DateTime.now().day);
-                          }:null,
+                    onPressed: !checkError && listCDTemp.length != 0
+                        ? () {
+                            print(tungay.day < DateTime.now().day);
+                          }
+                        : null,
                     child: Text(
                       'KÝ LỆNH (${listCDTemp.length})',
                       style: TextStyle(

@@ -5,7 +5,7 @@ import 'package:slaixe2/InnerShadow.dart';
 import 'package:slaixe2/Model/DSChuyendi.dart';
 import 'package:slaixe2/Model/DSChuyendiDuKien.dart';
 import 'package:slaixe2/Model/DSDaCapLenh.dart';
-import 'package:slaixe2/Model/TrangThai.dart';
+
 import 'package:slaixe2/lenh/KiLenh.dart';
 import 'package:slaixe2/lenh/SuaKeHoach.dart';
 
@@ -90,6 +90,7 @@ class _LenhState extends State<Lenh> {
     'Tất cả',
     'TT TP. Thái Nguyên - Nam Hà Giang',
   ];
+  
   final List<DSDaCapLenh> dsDaCapLenh = [
     DSDaCapLenh(
         'LVC-0000437/SPCT',
@@ -140,35 +141,16 @@ class _LenhState extends State<Lenh> {
 
   @override
   Widget build(BuildContext context) {
-    //    dsCDtemp = [
-    //   DSChuyendi('Danh sách chuyến đi dự kiến', Colors.black.withOpacity(0.6)),
-    //   DSChuyendi('Danh sách đã cấp lệnh cho lái xe', Colors.orange),
-    //   DSChuyendi('Danh sách lệnh Đang thực hiện', Colors.blue),
-    //   DSChuyendi('Danh sách lệnh Đã hoàn thành', Colors.green),
-    //   DSChuyendi('Danh sách lệnh Không hoàn thành', Colors.red),
-    // ];
     size = MediaQuery.of(context).size;
     return Scaffold(
       appBar: AppBar(
         title: wannaSearch
-            ? AnimatedContainer(
-                duration: Duration(seconds: 10),
-                curve: Curves.easeInCirc,
-                // transform: Matrix4.identity()..rotateY(1),
-                child: Row(
-                  mainAxisSize: MainAxisSize.max,
-                  // mainAxisAlignment: MainAxisAlignment.start,
-                  // crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    IconButton(
-                        onPressed: () {},
-                        icon: Icon(
-                          Icons.arrow_back_ios,
-                          size: 20,
-                        )),
-                    SizedBox(
-                        width: 180,
+            ?   Container(
+                      // height: 30,
+                        width: 260,
+                        // color: Colors.black,
                         child: TextFormField(
+                          cursorColor: Colors.white,
                           style: TextStyle(
                               color: Colors.white,
                               fontFamily: 'Roboto Regular',
@@ -180,14 +162,24 @@ class _LenhState extends State<Lenh> {
                                   color: Colors.white,
                                   fontFamily: 'Roboto Regular',
                                   fontSize: 14)),
-                        )),
-                  ],
+                        ))
+            : AnimatedContainer(
+               duration: Duration(seconds: 2),
+                curve: Curves.easeIn,
+              child: Text(
+                  'LỆNH VẬN CHUYỂN',
+                  style: TextStyle(fontSize: 16),
                 ),
-              )
-            : Text(
-                'LỆNH VẬN CHUYỂN',
-                style: TextStyle(fontSize: 16),
-              ),
+            ),
+            leading: wannaSearch? 
+                    IconButton(
+                        onPressed: () {},
+                        icon: Icon(
+                          Icons.arrow_back_ios,
+                          size: 20,
+                        ))
+                  
+                 :SizedBox(),
         centerTitle: !wannaSearch,
         actions: [
           IconButton(
@@ -514,15 +506,8 @@ class _LenhState extends State<Lenh> {
             ),
             GestureDetector(
               onTap: () {
-                 
                 setState(() {
                   showDSChuyenDi = !showDSChuyenDi;
-                  // print(DSChuyenDi[index].title);
-                  // print(DSChuyenDi.length);
-                  // print(dsCDtemp[index].title);
-                  // print(dsCDtemp.length);
-                 
-                  dsCDtemp.removeWhere((element) => DSChuyenDi[index].title == element.title);
                 });
               },
               child: Container(
@@ -540,13 +525,9 @@ class _LenhState extends State<Lenh> {
                   children: [
                     IconButton(
                         onPressed: () {
-
                           if (index > 0) {
-                            
                             setState(() {
                               index--;
-                             
-                              dsCDtemp.removeWhere((element) => DSChuyenDi[index].title == element.title);
                             });
                           }
                         },
@@ -561,13 +542,9 @@ class _LenhState extends State<Lenh> {
                     IconButton(
                         onPressed: () {
                           if (index < DSChuyenDi.length - 1) {
-                           
                             setState(() {
                               index++;
-                             
-                              dsCDtemp.removeWhere((element) => DSChuyenDi[index].title == element.title);
                             });
-                            
                           }
                         },
                         icon: Icon(Icons.arrow_circle_right_outlined)),
@@ -588,8 +565,7 @@ class _LenhState extends State<Lenh> {
                           ? ListView.builder(
                               itemCount: dsDaCapLenh.length,
                               itemBuilder: (context, inde) {
-                                return itemLenhDaCapChoLaiXe(
-                                    dsDaCapLenh, inde);
+                                return itemLenhDaCapChoLaiXe(dsDaCapLenh, inde);
                               })
                           : Center(
                               child: Text('Không có dữ liệu'),
@@ -599,7 +575,7 @@ class _LenhState extends State<Lenh> {
                           alignment: Alignment.topCenter,
                           child: Container(
                             width: size.width * 0.9,
-                            height: 150,
+                            height: 155,
                             decoration:
                                 BoxDecoration(color: Colors.white, boxShadow: [
                               BoxShadow(
@@ -611,18 +587,30 @@ class _LenhState extends State<Lenh> {
                             child: ListView.builder(
                                 itemCount: dsCDtemp.length,
                                 itemBuilder: (context, inde) {
-                                  return Container(
-                                    width: size.width * 0.9,
-                                    height: 40,
-                                    child: Center(
-                                      child: Text(dsCDtemp[inde].title,
-                                          style: TextStyle(
-                                            color: dsCDtemp[inde].color,
-                                            fontFamily: 'Roboto Bold',
-                                            fontSize: 14,
-                                          )),
-                                    ),
-                                  );
+                                  return DSChuyenDi[index].title ==
+                                          dsCDtemp[inde].title
+                                      ? SizedBox()
+                                      : GestureDetector(
+                                        onTap: () {
+                                          setState(() {
+                                            index = inde;
+                                          });
+                                          // print(DSChuyenDi[inde].title);
+                                          // print(dsCDtemp[inde].title);
+                                        },
+                                        child: Container(
+                                            width: size.width * 0.9,
+                                            height: 40,
+                                            child: Center(
+                                              child: Text(dsCDtemp[inde].title,
+                                                  style: TextStyle(
+                                                    color: dsCDtemp[inde].color,
+                                                    fontFamily: 'Roboto Bold',
+                                                    fontSize: 14,
+                                                  )),
+                                            ),
+                                          ),
+                                      );
                                 }),
                           ),
                         )
@@ -819,6 +807,7 @@ class _LenhState extends State<Lenh> {
                 Row(
                   mainAxisSize: MainAxisSize.max,
                   children: [
+                  //  itemListView(list[index].trangthailenh, 'asset/icons/list-status.svg', Colors.green, false),
                     Row(
                       children: [
                         SvgPicture.asset('asset/icons/list-status.svg',
@@ -826,13 +815,17 @@ class _LenhState extends State<Lenh> {
                         SizedBox(
                           width: 10,
                         ),
-                        Text('${list[index].trangthailenh} - ',
+                        Text('${list[index].trangthailenh}',
                             maxLines: 10,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                                 color: Colors.green,
                                 fontFamily: 'Roboto Medium',
                                 fontSize: 14)),
+                                Text(' - ',style: TextStyle(
+                                color: Colors.black,
+                                fontFamily: 'Roboto Medium',
+                                fontSize: 14))
                       ],
                     ),
                     Text(list[index].trangthaicho,
@@ -913,6 +906,7 @@ class _LenhState extends State<Lenh> {
 
   Row itemListView(String title, String icon, Color color, bool underline) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         SvgPicture.asset(icon, width: 24, height: 24),
         SizedBox(
