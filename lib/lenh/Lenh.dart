@@ -18,7 +18,7 @@ class Lenh extends StatefulWidget {
   State<Lenh> createState() => _LenhState();
 }
 
-class _LenhState extends State<Lenh> {
+class _LenhState extends State<Lenh> with SingleTickerProviderStateMixin {
   Size size;
   bool wannaSearch = false;
   bool checkError = false;
@@ -33,6 +33,9 @@ class _LenhState extends State<Lenh> {
   final denngayController = TextEditingController(
       text: DateFormat('dd-MM-yyyy').format(DateTime.now()));
   int index = 0;
+  AnimationController _controller;
+  Animation<Offset> _offsetAnimation;
+  var _opacity;
   final List<String> filterAsCondition = ['Giờ XB', 'BKS', 'Tuyến vận chuyển'];
   final List<DSChuyendi> DSChuyenDi = [
     DSChuyendi('Danh sách chuyến đi dự kiến', Colors.black.withOpacity(0.6)),
@@ -90,7 +93,7 @@ class _LenhState extends State<Lenh> {
     'Tất cả',
     'TT TP. Thái Nguyên - Nam Hà Giang',
   ];
-  
+
   final List<DSDaCapLenh> dsDaCapLenh = [
     DSDaCapLenh(
         'LVC-0000437/SPCT',
@@ -135,8 +138,15 @@ class _LenhState extends State<Lenh> {
   ];
   @override
   void initState() {
-    // TODO: implement initState
+    _controller =
+        AnimationController(vsync: this, duration: Duration(milliseconds: 400));
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   @override
@@ -145,47 +155,64 @@ class _LenhState extends State<Lenh> {
     return Scaffold(
       appBar: AppBar(
         title: wannaSearch
-            ?   Container(
+            ? SlideTransition(
+                position: _offsetAnimation,
+                child: FadeTransition(
+                  opacity: _opacity,
+                  child: Container(
                       // height: 30,
-                        width: 260,
-                        // color: Colors.black,
-                        child: TextFormField(
-                          cursorColor: Colors.white,
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontFamily: 'Roboto Regular',
-                              fontSize: 14),
-                          decoration: InputDecoration(
-                              border: InputBorder.none,
-                              hintText: 'Nhập từ khóa tìm kiếm...',
-                              hintStyle: TextStyle(
-                                  color: Colors.white,
-                                  fontFamily: 'Roboto Regular',
-                                  fontSize: 14)),
-                        ))
+                      width: 260,
+                      // color: Colors.black,
+                      child: TextFormField(
+                        cursorColor: Colors.white,
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontFamily: 'Roboto Regular',
+                            fontSize: 14),
+                        decoration: InputDecoration(
+                            border: InputBorder.none,
+                            hintText: 'Nhập từ khóa tìm kiếm...',
+                            hintStyle: TextStyle(
+                                color: Colors.white,
+                                fontFamily: 'Roboto Regular',
+                                fontSize: 14)),
+                      )),
+                ),
+              )
             : AnimatedContainer(
-               duration: Duration(seconds: 2),
+                duration: Duration(seconds: 2),
                 curve: Curves.easeIn,
-              child: Text(
+                child: Text(
                   'LỆNH VẬN CHUYỂN',
                   style: TextStyle(fontSize: 16),
                 ),
-            ),
-            leading: wannaSearch? 
-                    IconButton(
-                        onPressed: () {},
-                        icon: Icon(
-                          Icons.arrow_back_ios,
-                          size: 20,
-                        ))
-                  
-                 :SizedBox(),
+              ),
+        leading: wannaSearch
+            ? SlideTransition(
+                position: _offsetAnimation,
+                child: FadeTransition(
+                  opacity: _controller,
+                  child: IconButton(
+                      onPressed: () {},
+                      icon: Icon(
+                        Icons.arrow_back_ios,
+                        size: 20,
+                      )),
+                ),
+              )
+            : SizedBox(),
         centerTitle: !wannaSearch,
         actions: [
           IconButton(
               onPressed: () {
                 setState(() {
                   wannaSearch = !wannaSearch;
+                  _offsetAnimation = Tween<Offset>(
+                          begin: Offset(-1.5, 0.0), end: Offset(0.0, 0.0))
+                      .animate(CurvedAnimation(
+                          parent: _controller, curve: Curves.easeIn));
+                  // _opacity = Tween(begin: 0.0, end: 1.0).animate(_controller);
+                  _controller.forward(from: 0);
                 });
               },
               icon: Icon(wannaSearch ? Icons.close : Icons.search)),
@@ -591,14 +618,14 @@ class _LenhState extends State<Lenh> {
                                           dsCDtemp[inde].title
                                       ? SizedBox()
                                       : GestureDetector(
-                                        onTap: () {
-                                          setState(() {
-                                            index = inde;
-                                          });
-                                          // print(DSChuyenDi[inde].title);
-                                          // print(dsCDtemp[inde].title);
-                                        },
-                                        child: Container(
+                                          onTap: () {
+                                            setState(() {
+                                              index = inde;
+                                            });
+                                            // print(DSChuyenDi[inde].title);
+                                            // print(dsCDtemp[inde].title);
+                                          },
+                                          child: Container(
                                             width: size.width * 0.9,
                                             height: 40,
                                             child: Center(
@@ -610,7 +637,7 @@ class _LenhState extends State<Lenh> {
                                                   )),
                                             ),
                                           ),
-                                      );
+                                        );
                                 }),
                           ),
                         )
@@ -807,7 +834,7 @@ class _LenhState extends State<Lenh> {
                 Row(
                   mainAxisSize: MainAxisSize.max,
                   children: [
-                  //  itemListView(list[index].trangthailenh, 'asset/icons/list-status.svg', Colors.green, false),
+                    //  itemListView(list[index].trangthailenh, 'asset/icons/list-status.svg', Colors.green, false),
                     Row(
                       children: [
                         SvgPicture.asset('asset/icons/list-status.svg',
@@ -822,7 +849,8 @@ class _LenhState extends State<Lenh> {
                                 color: Colors.green,
                                 fontFamily: 'Roboto Medium',
                                 fontSize: 14)),
-                                Text(' - ',style: TextStyle(
+                        Text(' - ',
+                            style: TextStyle(
                                 color: Colors.black,
                                 fontFamily: 'Roboto Medium',
                                 fontSize: 14))
