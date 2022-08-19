@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/src/foundation/key.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:slaixe2/lenh/Lenh.dart';
+import 'package:slaixe2/lenh/LenhVanChuyen.dart';
 
 import 'hang/Hang.dart';
 import 'home/Home.dart';
+import 'lenh/Lenh.dart';
 import 'taikhoan/TaiKhoan.dart';
 import 'thongbao/ThongBao.dart';
 import 've/Ve.dart';

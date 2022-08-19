@@ -1,10 +1,23 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:slaixe2/BottomBar.dart';
+import 'package:slaixe2/checkAccount.dart';
+
+import 'restartwidget.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(RestartWidget(child: MyApp(),));
+  HttpOverrides.global = MyHttpOverrides();
 }
-
+class MyHttpOverrides extends HttpOverrides {
+  @override
+  HttpClient createHttpClient(SecurityContext context) {
+    return super.createHttpClient(context)
+      ..badCertificateCallback =
+          (X509Certificate cert, String host, int port) => true;
+  }
+}
 class MyApp extends StatelessWidget {
   const MyApp({Key key}) : super(key: key);
 
@@ -26,7 +39,7 @@ class MyApp extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: BottomBar(0),
+      home: checkAccount(),
     );
   }
 }
