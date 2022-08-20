@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:intl/intl.dart';
@@ -5,6 +7,7 @@ import 'package:slaixe2/InnerShadow.dart';
 import 'package:slaixe2/Model/DSChuyendi.dart';
 import 'package:slaixe2/Model/DSChuyendiDuKien.dart';
 import 'package:slaixe2/Model/DSDaCapLenh.dart';
+import 'package:slaixe2/Model/DanhSachKeHoach.dart';
 import 'package:slaixe2/helpers/ApiHelper.dart';
 
 import 'package:slaixe2/lenh/KiLenh.dart';
@@ -15,7 +18,8 @@ import '../components/itemListView.dart';
 import '../extensions/extensions.dart';
 
 class LenhVanChuyen extends StatefulWidget {
-  const LenhVanChuyen({Key key}) : super(key: key);
+  String idlenh;
+  LenhVanChuyen(this.idlenh);
 
   @override
   State<LenhVanChuyen> createState() => _LenhState();
@@ -40,23 +44,9 @@ class _LenhState extends State<LenhVanChuyen>
   AnimationController _controller;
   Animation<Offset> _offsetAnimation;
   var _opacity;
-  Map<String, dynamic> requestPayload = {
-    'custom': {
-      'DenNgay': '',
-      'IdDnvtTuyen': null,
-      'TuNgay': '',
-    },
-    'loadOptions': {
-      'searchOperation': 'contains',
-      'searchValue': null,
-      'skip': 0,
-      'sort': [
-        {'desc': '', 'selector': ''}
-      ],
-      'take': 10,
-      'userData': {}
-    },
-  };
+  var convertdatetime = DateTime(
+      DateTime.now().year, DateTime.now().month, DateTime.now().day, 0, 0, 0);
+  Map<String, dynamic> requestPayload = {};
   final List<String> filterAsCondition = ['Giờ XB', 'BKS', 'Tuyến vận chuyển'];
   final List<DSChuyendi> DSChuyenDi = [
     DSChuyendi('Danh sách chuyến đi dự kiến', Colors.black.withOpacity(0.6)),
@@ -102,7 +92,7 @@ class _LenhState extends State<LenhVanChuyen>
         'Nguyễn Ngọc Hiếu',
         '')
   ];
-
+  List<KeHoach> listtong=[];
   List<DSChuyendi> dsCDtemp = [
     DSChuyendi('Danh sách chuyến đi dự kiến', Colors.black.withOpacity(0.6)),
     DSChuyendi('Danh sách đã cấp lệnh cho lái xe', Colors.orange),
@@ -157,12 +147,16 @@ class _LenhState extends State<LenhVanChuyen>
         'Chờ kích hoạt',
         'Chưa có chuyến đi bán vé'),
   ];
+  var dslistfuture;
+
   @override
   void initState() {
     _controller =
         AnimationController(vsync: this, duration: Duration(milliseconds: 400));
     super.initState();
+    print(widget.idlenh);
     loaddskehoach();
+    print(convertdatetime.toUtc().toIso8601String());
   }
 
   @override
@@ -171,10 +165,34 @@ class _LenhState extends State<LenhVanChuyen>
     super.dispose();
   }
 
-  Future loaddskehoach() async {
-    ApiHelper.postMultipart(
-      apilenh.apidskehoach,requestPayload
-    );
+  void loaddskehoach() async {
+    setState(() {
+      requestPayload = {
+        'custom': {
+          'DenNgay': convertdatetime.toUtc().toIso8601String(),
+          'IdDnvtTuyen': widget.idlenh,
+          'TuNgay': convertdatetime.toUtc().toIso8601String(),
+        },
+        'loadOptions': {
+          'searchOperation': 'contains',
+          'searchValue': null,
+          'skip': 0,
+          'take': 10,
+          'userData': {}
+        },
+      };
+    
+      print(requestPayload);
+    });
+    try {
+      
+      // 'sort': [
+      //       {'desc': '', 'selector': ''}
+      //     ],
+      dslistfuture = ApiHelper.post(apilenh.apidskehoach, requestPayload);
+    } catch (ex) {
+      dslistfuture = null;
+    }
   }
 
   @override
@@ -489,9 +507,7 @@ class _LenhState extends State<LenhVanChuyen>
         ],
       ),
       body: Container(
-        // padding: EdgeInsets.all(10),
         width: size.width,
-        // height: size.height,
         child: Column(
           mainAxisSize: MainAxisSize.max,
           children: [
@@ -595,14 +611,23 @@ class _LenhState extends State<LenhVanChuyen>
               ),
             ),
             FutureBuilder(
-                future: loaddskehoach(),
+                future: dslistfuture,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return Expanded(
                         child: Center(
                       child: CircularProgressIndicator(),
                     ));
-                  } else if (snapshot.hasData) {
+                  }
+                   else if (snapshot.hasError) {
+                   
+                    return Text('${snapshot.error}');
+                  }  
+                  else if (snapshot.hasData) {
+                  //  print(' data ${snapshot.data}');
+                    // var dslisthientai =[];
+                 var alldata = DanhSachKeHoach.fromJson(snapshot.data);
+                  listtong.addAll(alldata.data.list);
                     return Expanded(
                       child: SingleChildScrollView(
                         child: Column(
@@ -614,10 +639,10 @@ class _LenhState extends State<LenhVanChuyen>
                                     ? ListView.builder(
                                         shrinkWrap: true,
                                         physics: NeverScrollableScrollPhysics(),
-                                        itemCount: dschuyendidukien.length,
+                                        itemCount: listtong.length,
                                         itemBuilder: (context, inde) {
                                           return itemChuyenDiDuKien(
-                                              dschuyendidukien, index);
+                                              listtong, inde);
                                         })
                                     : index == 1
                                         ? ListView.builder(
@@ -692,7 +717,9 @@ class _LenhState extends State<LenhVanChuyen>
                             SizedBox(
                               width: 150,
                               child: ElevatedButton(
-                                  onPressed: () {},
+                                  onPressed: () {
+                                    loaddskehoach();
+                                  },
                                   child: Text('THÊM',
                                       style: TextStyle(
                                         fontFamily: 'Roboto Bold',
@@ -717,9 +744,12 @@ class _LenhState extends State<LenhVanChuyen>
   }
 
   Container itemChuyenDiDuKien(
-    List<DSChuyendiDuKien> listdata,
+    List<KeHoach> listdata,
     int index,
   ) {
+    var tenlaixetemp = listdata.contains(KeHoach(hoTenPhuXe: 'null'));
+    print('ho ten phu xe : $tenlaixetemp');
+    var datetemp = DateTime.parse(listdata[index].ngayDuong);
     return Container(
       // width: widthScreen,
       margin: EdgeInsets.only(right: 18, left: 18, top: 10, bottom: 10),
@@ -741,7 +771,7 @@ class _LenhState extends State<LenhVanChuyen>
             child: Column(
               children: [
                 itemListView(
-                    title: '${listdata[index].datetime}',
+                    title: '${listdata[index].not.substring(0,listdata[index].not.length-3)} ${datetemp.day}/${datetemp.month}/${datetemp.year}',
                     icon: 'asset/icons/calendar-clock.svg',
                     color: Colors.black,
                     underline: false),
@@ -749,7 +779,7 @@ class _LenhState extends State<LenhVanChuyen>
                   height: 8,
                 ),
                 itemListView(
-                    title: '${listdata[index].biensoxe}',
+                    title: '${listdata[index].bienSoXe}',
                     icon: 'asset/icons/card-bulleted-outline.svg',
                     color: Colors.black,
                     underline: false),
@@ -758,30 +788,38 @@ class _LenhState extends State<LenhVanChuyen>
                 ),
                 itemListView(
                     title:
-                        '${listdata[index].hanhtrinh}\n (${listdata[index].sohieuxe})',
+                        '${listdata[index].loTrinh}\n (${listdata[index].maTuyen})',
                     icon: 'asset/icons/road-variant.svg',
                     color: Colors.black,
                     underline: false),
                 SizedBox(
                   height: 8,
                 ),
-                itemListView(
-                    title: listdata[index].tenlaixe.isEmpty
-                        ? '(Trống)'
-                        : '${listdata[index].tenlaixe}',
-                    icon: 'asset/icons/steering.svg',
-                    color: Colors.blue,
-                    underline: false),
+                
+                // Row(
+                //   mainAxisSize: MainAxisSize.min,
+                //   children: [
+                //     Expanded(
+                //       child: itemListView(
+                //       title: listdata[index].danhSachLaiXeThucHien.first.hoTen.isEmpty
+                //           ? '(Trống)'
+                //           : '${listdata[index].danhSachLaiXeThucHien.first.hoTen}',
+                //       icon: 'asset/icons/steering.svg',
+                //       color: Colors.blue,
+                //       underline: false),
+                //     ),
+                //     // listdata.contains('jhu')?
+                // ],),
                 SizedBox(
                   height: 8,
                 ),
-                itemListView(
-                    title: listdata[index].tenphuxe.isEmpty
-                        ? '(Trống)'
-                        : '${listdata[index].tenphuxe}',
-                    icon: 'asset/icons/account-tie-outline.svg',
-                    color: Colors.black,
-                    underline: false),
+                // itemListView(
+                //     title: listdata[index].hoTenPhuXe.isEmpty
+                //         ? '(Trống)'
+                //         : '${listdata[index].hoTenPhuXe}',
+                //     icon: 'asset/icons/account-tie-outline.svg',
+                //     color: Colors.black,
+                //     underline: false),
               ],
             ),
           ),

@@ -7,7 +7,8 @@ import 'package:slaixe2/lenh/LenhVanChuyen.dart';
 import 'hang/Hang.dart';
 import 'home/Home.dart';
 import 'lenh/Lenh.dart';
-import 'taikhoan/TaiKhoan.dart';
+
+import 'taikhoan/Taikhoan.dart';
 import 'thongbao/ThongBao.dart';
 import 've/Ve.dart';
 
@@ -28,7 +29,7 @@ class _BottomBarState extends State<BottomBar> {
     Lenh(),
     Hang(),
     ThongBao(),
-    TaiKhoan(),
+    Taikhoan(),
   ];
   @override
   void initState() {

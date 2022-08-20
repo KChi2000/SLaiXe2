@@ -2,7 +2,7 @@ class LenhHienTai {
   bool status;
   String message;
   int errorCode;
-  Data data;
+  DataLenhHienTai data;
 
   LenhHienTai({this.status, this.message, this.errorCode, this.data});
 
@@ -10,7 +10,7 @@ class LenhHienTai {
     status = json['status'];
     message = json['message'];
     errorCode = json['errorCode'];
-    data = json['data'] != null ? new Data.fromJson(json['data']) : null;
+    data = json['data'] != null ? new DataLenhHienTai.fromJson(json['data']) : null;
   }
 
   Map<String, dynamic> toJson() {
@@ -25,7 +25,7 @@ class LenhHienTai {
   }
 }
 
-class Data {
+class DataLenhHienTai {
   String idLenh;
   String maLenh;
   Null maChuyenDi;
@@ -39,7 +39,7 @@ class Data {
   String trangThai;
   String maMauTrangThai;
 
-  Data(
+  DataLenhHienTai(
       {this.idLenh,
       this.maLenh,
       this.maChuyenDi,
@@ -53,7 +53,7 @@ class Data {
       this.trangThai,
       this.maMauTrangThai});
 
-  Data.fromJson(Map<String, dynamic> json) {
+  DataLenhHienTai.fromJson(Map<String, dynamic> json) {
     idLenh = json['idLenh'];
     maLenh = json['maLenh'];
     maChuyenDi = json['maChuyenDi'];

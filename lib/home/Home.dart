@@ -10,6 +10,7 @@ import 'package:slaixe2/components/itemListView.dart';
 import 'package:slaixe2/extensions/extensions.dart';
 import 'package:slaixe2/helpers/ApiHelper.dart';
 
+import '../Model/LenhHienTai.dart';
 import '../Routes.dart';
 import '../checkAccount.dart';
 import '../helpers/LoginHelper.dart';
@@ -26,7 +27,7 @@ class HomeState extends State<Home> {
   Timer timer;
   int timespan;
   var lenhHienTaiFuture;
-
+  String idlenh='';
   // LenhHienTai lenhhientai;
   String checklenh = 'has data';
   var datetime;
@@ -49,7 +50,12 @@ class HomeState extends State<Home> {
       lenhHienTaiFuture = null;
     }
   }
-
+@override
+  void dispose() {
+    // TODO: implement dispose
+    timer.cancel();
+    super.dispose();
+  }
   @override
   Widget build(BuildContext context) {
     size = MediaQuery.of(context).size;
@@ -94,7 +100,7 @@ class HomeState extends State<Home> {
                       SizedBox(
                         width: 200,
                         child: Text(
-                          'ddddd',
+                          '${LoginHelper.Default.userToken.name}',
                           style: TextStyle(
                               fontFamily: 'Roboto Italic',
                               // fontWeight: FontWeight.bold,
@@ -128,13 +134,24 @@ class HomeState extends State<Home> {
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     context.loaderOverlay.show();
-                  } else if (snapshot.hasError) {
-                    context.loaderOverlay.hide();
-                    return customStatus(Text('Lỗi',
-                        style: TextStyle(
-                            fontFamily: 'Roboto Regular', fontSize: 14)));
-                  } else if (snapshot.hasData) {
-                    context.loaderOverlay.hide();
+                  } 
+                  // else if (snapshot.hasError) {
+                  //   context.loaderOverlay.hide();
+                  //   return customStatus(Text('Lỗi',
+                  //       style: TextStyle(
+                  //           fontFamily: 'Roboto Regular', fontSize: 14)));
+                  // } 
+                  else if (snapshot.hasData) {
+                     context.loaderOverlay.hide();
+                     idlenh = snapshot.data.data.idLenh;
+                  if(!snapshot.data.status){
+                    return customStatus(Text('Không có dữ liệu lệnh hiện tại !',
+                      style: TextStyle(
+                          fontFamily: 'Roboto Regular',
+                          fontSize: 14,
+                          color: HexColor.fromHex('#737373'))));
+                  }
+                   
                     datetime = DateTime.parse(
                             snapshot.data.data.thoiGianXuatBenKeHoach)
                         .toLocal();
@@ -163,7 +180,7 @@ class HomeState extends State<Home> {
               alignment: Alignment.topLeft,
               child: itemChucNang('Lệnh điện tử', 'Quản lí lệnh',
                   'asset/icons/script-text-outline.svg', () {
-                Routes.navigatetoQuanLiLenh(context);
+                Routes.navigatetoQuanLiLenh(context,idlenh);
               }),
             )
           ],

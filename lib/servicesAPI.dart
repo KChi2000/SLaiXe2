@@ -1,4 +1,4 @@
-final backend_url = 'https://api-ve.nguyencongtuyen.sonphat.dev/';
+final backend_url = 'https://api.qc03.lenh.sonphat.dev/';
 class servicesAPI{
   
   static final API_KiemSoatVeTaiBen = backend_url + 'be_api/kiemsoatvetaiben/';
@@ -10,7 +10,7 @@ class servicesAPI{
   static final API_ThongTin = backend_url + 'api/';
   static final API_PhienBan = backend_url + 'PhienBan/api/';
   static final API_HangHoa = 'https://api-hanghoa.nguyencongtuyen.sonphat.dev/api/';
-  static final API_LenhDienTu = 'https://api-lenhdientu.nguyencongtuyen.sonphat.dev/api/Driver/';
+  static final API_LenhDienTu = 'https://api.qc03.lenh.sonphat.dev/api/Driver/';
   static final API_File = 'https://file-ve.nguyencongtuyen.sonphat.dev/api/';
   static final API_DoanhNghiepVanTai = backend_url + 'be_api/doanhnghiepvantai/';
   static final API_CauHinhHeThong = backend_url + 'be_api/cauhinhhethong/';
@@ -27,6 +27,6 @@ class servicesAPI{
 }
 class apilenh{
 
-  static final apidskehoach = backend_url+'ql-lenh-van-chuyen/api/LenhVanChuyen/danh-sach-lenh-da-cap-cho-lai-xe';
+  static final apidskehoach = backend_url+'ql-lenh-van-chuyen/api/LenhVanChuyen/danh-sach-ke-hoach';
   // static final api
 }

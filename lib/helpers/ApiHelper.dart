@@ -206,7 +206,10 @@ class ApiHelper {
               "Content-Type": "application/json",
             },
             body: jsonEncode(data))
-        .then((resp) => jsonDecode(resp.body));
+        .then((resp)  {
+          print('json : ${resp.body}');
+          return jsonDecode(resp.body);
+        });
   }
 
   static Future<String> postMultipart(

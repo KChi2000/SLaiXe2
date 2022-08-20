@@ -17,7 +17,7 @@ class LoginHelper {
 // Cái này tạo thông tin chung, cấu hình theo mặc định, để toàn bộ chương trình, chố nào cũng có thể dung
 // Đoạn này cũng áp dụng tương đối theo mô hình signleton, nhưng anh không lock hàm khởi tạo của class
   static LoginHelper Default = LoginHelper(
-      "https://dangnhap.sonphat.dev/auth", "Sbus.vn", "BanVeTaiBen");
+      "https://dangnhap.qc03.qlbx.sonphat.dev/auth", "Sbus.vn", "BanVeTaiBen");
 
   String URL; // Thông tin server đăng nhập
   String Realm; // Thông tin cấu hình vùng dữ liệu đăng nhập
