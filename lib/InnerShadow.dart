@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
 class InnerShadow extends SingleChildRenderObjectWidget {
-  const InnerShadow({
+   InnerShadow({
     
     this.blur = 10,
     this.color = Colors.black38,
