@@ -1,13 +1,13 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:intl/intl.dart';
 import 'package:slaixe2/InnerShadow.dart';
 import 'package:slaixe2/Model/DSChuyendi.dart';
-import 'package:slaixe2/Model/DSChuyendiDuKien.dart';
-import 'package:slaixe2/Model/DSDaCapLenh.dart';
+import 'package:slaixe2/Model/DSLenh.dart';
+
 import 'package:slaixe2/Model/DanhSachKeHoach.dart';
+import 'package:slaixe2/Model/lenhModel.dart';
 import 'package:slaixe2/helpers/ApiHelper.dart';
 
 import 'package:slaixe2/lenh/KiLenh.dart';
@@ -55,44 +55,9 @@ class _LenhState extends State<LenhVanChuyen>
     DSChuyendi('Danh sách lệnh Đã hoàn thành', Colors.green),
     DSChuyendi('Danh sách lệnh Không hoàn thành', Colors.red),
   ];
-  final List<DSChuyendiDuKien> dschuyendidukien = [
-    DSChuyendiDuKien(
-        '7:30 11/08/2022',
-        '20B-94469',
-        'TT TP.Thái Nguyên - Bến xe Mỹ Đình',
-        '2029.1113.A',
-        'Nguyễn Ngọc Hiếu',
-        ''),
-    DSChuyendiDuKien(
-        '7:30 11/08/2022',
-        '20B-94469',
-        'TT TP.Thái Nguyên - Bến xe Mỹ Đình',
-        '2029.1113.A',
-        'Nguyễn Ngọc Hiếu',
-        ''),
-    DSChuyendiDuKien(
-        '7:30 11/08/2022',
-        '20B-94469',
-        'TT TP.Thái Nguyên - Bến xe Mỹ Đình',
-        '2029.1113.A',
-        'Nguyễn Ngọc Hiếu',
-        ''),
-    DSChuyendiDuKien(
-        '7:30 11/08/2022',
-        '20B-94469',
-        'TT TP.Thái Nguyên - Bến xe Mỹ Đình',
-        '2029.1113.A',
-        'Nguyễn Ngọc Hiếu',
-        ''),
-    DSChuyendiDuKien(
-        '7:30 11/08/2022',
-        '20B-94469',
-        'TT TP.Thái Nguyên - Bến xe Mỹ Đình',
-        '2029.1113.A',
-        'Nguyễn Ngọc Hiếu',
-        '')
-  ];
-  List<KeHoach> listtong = [];
+
+  List<KeHoach> listkehoach = [];
+  List<LenhDataDetail> listlenh = [];
   List<DSChuyendi> dsCDtemp = [
     DSChuyendi('Danh sách chuyến đi dự kiến', Colors.black.withOpacity(0.6)),
     DSChuyendi('Danh sách đã cấp lệnh cho lái xe', Colors.orange),
@@ -105,59 +70,30 @@ class _LenhState extends State<LenhVanChuyen>
     'TT TP. Thái Nguyên - Nam Hà Giang',
   ];
 
-  final List<DSDaCapLenh> dsDaCapLenh = [
-    DSDaCapLenh(
-        'LVC-0000437/SPCT',
-        '07:30 25/07/2022',
-        '20B-944698',
-        'TT TP.Thái Nguyên - Bến xe Mỹ Đình',
-        '2029.1113.A',
-        'Hà Chy',
-        'Đã ký lệnh',
-        'Chờ kích hoạt',
-        'Chưa có chuyến đi bán vé'),
-    DSDaCapLenh(
-        'LVC-0000437/SPCT',
-        '07:30 25/07/2022',
-        '20B-944698',
-        'TT TP.Thái Nguyên - Bến xe Mỹ Đình',
-        '2029.1113.A',
-        'Hà Chy',
-        'Đã ký lệnh',
-        'Chờ kích hoạt',
-        'Chưa có chuyến đi bán vé'),
-    DSDaCapLenh(
-        'LVC-0000437/SPCT',
-        '07:30 25/07/2022',
-        '20B-944698',
-        'TT TP.Thái Nguyên - Bến xe Mỹ Đình',
-        '2029.1113.A',
-        'Hà Chy',
-        'Đã ký lệnh',
-        'Chờ kích hoạt',
-        'Chưa có chuyến đi bán vé'),
-    DSDaCapLenh(
-        'LVC-0000437/SPCT',
-        '07:30 25/07/2022',
-        '20B-944698',
-        'TT TP.Thái Nguyên - Bến xe Mỹ Đình',
-        '2029.1113.A',
-        'Hà Chy',
-        'Đã ký lệnh',
-        'Chờ kích hoạt',
-        'Chưa có chuyến đi bán vé'),
-  ];
   var dslistfuture;
   int skip = 0;
-//  bool sortDesc= false;
+  String typeapi = '';
   String choosefilter = '';
   int stylesort = 0;
+  String selector = '';
   @override
   void initState() {
-    super.initState();
-    _controller =
+      _controller =
         AnimationController(vsync: this, duration: Duration(milliseconds: 400));
-    loaddskehoach();
+        _controller.forward(from: 0);
+     _offsetAnimation = Tween<Offset>(
+                          begin: Offset(-1.5, 0.0), end: Offset(0.0, 0.0))
+                      .animate(CurvedAnimation(
+                          parent: _controller, curve: Curves.easeIn));
+    super.initState();
+  
+    loadds();
+  }
+
+  void setdstoNull() {
+    listkehoach = [];
+    listlenh = [];
+    skip = 0;
   }
 
   @override
@@ -166,7 +102,31 @@ class _LenhState extends State<LenhVanChuyen>
     super.dispose();
   }
 
-  void loaddskehoach() async {
+  void checkWhatFilterIs() {
+    if (choosefilter == 'Giờ XB') {
+      if (index == 0) {
+        setState(() {
+          selector = 'Not';
+        });
+      } else {
+        setState(() {
+          selector = 'GioXuatBen';
+        });
+      }
+    } else if (choosefilter == 'BKS') {
+      setState(() {
+        selector = 'BienSoXe';
+      });
+    } else if (choosefilter == 'Tuyến vận chuyển') {
+      setState(() {
+        selector = 'TenTuyen';
+      });
+    }
+  }
+
+  void loadds() async {
+    checkWhatFilterIs();
+
     setState(() {
       if (stylesort == 0) {
         print('fall into if loop');
@@ -198,10 +158,10 @@ class _LenhState extends State<LenhVanChuyen>
             'skip': skip,
             'sort': stylesort == 2
                 ? [
-                    {'desc': true, 'selector': "Not"}
+                    {'desc': true, 'selector': selector}
                   ]
                 : [
-                    {'desc': false, 'selector': "Not"}
+                    {'desc': false, 'selector': selector}
                   ],
             'take': 10,
             'userData': {}
@@ -211,12 +171,38 @@ class _LenhState extends State<LenhVanChuyen>
       print(requestPayload);
     });
     try {
-      dslistfuture = ApiHelper.post(apilenh.apidskehoach, requestPayload);
+      checkgettypeAPI();
+      dslistfuture = ApiHelper.post(typeapi, requestPayload);
     } catch (ex) {
       dslistfuture = null;
     }
   }
 
+  void checkgettypeAPI() {
+    if (index == 0) {
+      setState(() {
+        typeapi = apilenh.apidskehoach;
+      });
+    } else if (index == 1) {
+      setState(() {
+        typeapi = apilenh.apidsdacaplenh;
+      });
+    } else if (index == 2) {
+      setState(() {
+        typeapi = apilenh.apidslenhdangthuchien;
+      });
+    } else if (index == 3) {
+      setState(() {
+        typeapi = apilenh.apidslenhdahoanthanh;
+      });
+    } else if (index == 4) {
+      setState(() {
+        typeapi = apilenh.apidslenhkhonghoanthanh;
+      });
+    }
+  }
+
+ 
   @override
   Widget build(BuildContext context) {
     size = MediaQuery.of(context).size;
@@ -247,24 +233,24 @@ class _LenhState extends State<LenhVanChuyen>
                       )),
                 ),
               )
-            : AnimatedContainer(
-                duration: Duration(seconds: 2),
-                curve: Curves.easeIn,
-                child: Text(
-                  'LỆNH VẬN CHUYỂN',
-                  style: TextStyle(fontSize: 16),
-                ),
-              ),
+            : SlideTransition(
+              position: _offsetAnimation,
+              child: FadeTransition(
+                   opacity: _controller,
+                    child: Text(
+                      'LỆNH VẬN CHUYỂN',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  ),
+            ),
+          
         centerTitle: !wannaSearch,
         actions: [
           IconButton(
               onPressed: () {
                 setState(() {
                   wannaSearch = !wannaSearch;
-                  _offsetAnimation = Tween<Offset>(
-                          begin: Offset(-1.5, 0.0), end: Offset(0.0, 0.0))
-                      .animate(CurvedAnimation(
-                          parent: _controller, curve: Curves.easeIn));
+                 
                   // _opacity = Tween(begin: 0.0, end: 1.0).animate(_controller);
                   _controller.forward(from: 0);
                 });
@@ -541,7 +527,7 @@ class _LenhState extends State<LenhVanChuyen>
                   children: [
                     ...filterAsCondition.map((e) => InkWell(
                           onTap: () {
-                            listtong =[];
+                            setdstoNull();
                             if (choosefilter == e) {
                               if (stylesort == 2) {
                                 setState(() {
@@ -555,11 +541,12 @@ class _LenhState extends State<LenhVanChuyen>
                               }
                             } else if (choosefilter != e) {
                               setState(() {
+                                stylesort = 0;
                                 choosefilter = e;
                                 stylesort += 1;
                               });
                             }
-                            loaddskehoach();
+                            loadds();
                           },
                           child: Container(
                               margin: EdgeInsets.only(right: 10, top: 10),
@@ -567,7 +554,7 @@ class _LenhState extends State<LenhVanChuyen>
                               decoration: BoxDecoration(
                                   boxShadow: [
                                     BoxShadow(
-                                      color:choosefilter == e
+                                      color: choosefilter == e
                                           ? HexColor.fromHex('#03A9F4')
                                           : Colors.grey.withOpacity(0.3),
                                     ),
@@ -587,7 +574,16 @@ class _LenhState extends State<LenhVanChuyen>
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   choosefilter == e && stylesort == 1
-                                      ? RotatedBox(quarterTurns: 2,child: SvgPicture.asset('asset/icons/sort-bool-descending.svg',color:HexColor.fromHex('#03A9F4',),width: 14,height: 14,))
+                                      ? RotatedBox(
+                                          quarterTurns: 2,
+                                          child: SvgPicture.asset(
+                                            'asset/icons/sort-bool-descending.svg',
+                                            color: HexColor.fromHex(
+                                              '#03A9F4',
+                                            ),
+                                            width: 14,
+                                            height: 14,
+                                          ))
                                       : choosefilter == e && stylesort == 2
                                           ? SvgPicture.asset(
                                               'asset/icons/sort-bool-descending.svg',
@@ -629,6 +625,7 @@ class _LenhState extends State<LenhVanChuyen>
               onTap: () {
                 setState(() {
                   showDSChuyenDi = !showDSChuyenDi;
+                  print(showDSChuyenDi);
                 });
               },
               child: Container(
@@ -647,9 +644,10 @@ class _LenhState extends State<LenhVanChuyen>
                     IconButton(
                         onPressed: () {
                           if (index > 0) {
-                            listtong=[];
+                            setdstoNull();
                             setState(() {
                               index--;
+                              loadds();
                             });
                           }
                         },
@@ -663,11 +661,11 @@ class _LenhState extends State<LenhVanChuyen>
                     ),
                     IconButton(
                         onPressed: () {
-                          
                           if (index < DSChuyenDi.length - 1) {
-                            listtong=[];
+                            setdstoNull();
                             setState(() {
                               index++;
+                              loadds();
                             });
                           }
                         },
@@ -687,11 +685,81 @@ class _LenhState extends State<LenhVanChuyen>
                   } else if (snapshot.hasError) {
                     return Text('${snapshot.error}');
                   } else if (snapshot.hasData) {
-                    //  print(' data ${snapshot.data}');
-                    // var dslisthientai =[];
-                    var alldata = DanhSachKeHoach.fromJson(snapshot.data);
-                    listtong.addAll(alldata.data.list);
-                    print(listtong.length);
+                    var alldata;
+                    if (index == 0) {
+                      alldata = DanhSachKeHoach.fromJson(snapshot.data);
+                      listkehoach.addAll(alldata.data.list);
+                    } else {
+                      alldata = dsLenh.fromJson(snapshot.data);
+                      listlenh.addAll(alldata.data.list);
+                    }
+                    if (alldata.data.list.length == 0) {
+                      return Expanded(
+                        child: Container(
+                          child: Stack(
+                            children: [
+                              Center(
+                                  child: Text('Không có dữ liệu !'),
+                                ),
+                             
+                              showDSChuyenDi
+                                  ? Align(
+                                      alignment: Alignment.topCenter,
+                                      child: Container(
+                                        width: size.width * 0.9,
+                                        height: 155,
+                                        decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            boxShadow: [
+                                              BoxShadow(
+                                                  offset: Offset(0, 5),
+                                                  color:
+                                                      Colors.grey.withOpacity(0.3),
+                                                  spreadRadius: 2,
+                                                  blurRadius: 5)
+                                            ]),
+                                        child: ListView.builder(
+                                            itemCount: dsCDtemp.length,
+                                            itemBuilder: (context, inde) {
+                                              return DSChuyenDi[index].title ==
+                                                      dsCDtemp[inde].title
+                                                  ? SizedBox()
+                                                  : GestureDetector(
+                                                      onTap: () {
+                                                        setdstoNull();
+                                                        setState(() {
+                                                          showDSChuyenDi =
+                                                              !showDSChuyenDi;
+                                                          index = inde;
+                                                          loadds();
+                                                        });
+                                                      },
+                                                      child: Container(
+                                                        width: size.width * 0.9,
+                                                        height: 40,
+                                                        child: Center(
+                                                          child: Text(
+                                                              dsCDtemp[inde].title,
+                                                              style: TextStyle(
+                                                                color:
+                                                                    dsCDtemp[inde]
+                                                                        .color,
+                                                                fontFamily:
+                                                                    'Roboto Bold',
+                                                                fontSize: 14,
+                                                              )),
+                                                        ),
+                                                      ),
+                                                    );
+                                            }),
+                                      ),
+                                    )
+                                  : SizedBox()
+                            ],
+                          ),
+                        ),
+                      );
+                    }
                     return Expanded(
                       child: SingleChildScrollView(
                         child: Column(
@@ -706,24 +774,58 @@ class _LenhState extends State<LenhVanChuyen>
                                         // controller: _scrollController,
                                         shrinkWrap: true,
                                         physics: NeverScrollableScrollPhysics(),
-                                        itemCount: listtong.length,
+                                        itemCount: listkehoach.length,
                                         itemBuilder: (context, inde) {
                                           return itemChuyenDiDuKien(
-                                              listtong, inde);
+                                              listkehoach, inde);
                                         })
                                     : index == 1
                                         ? ListView.builder(
                                             shrinkWrap: true,
                                             physics:
                                                 NeverScrollableScrollPhysics(),
-                                            itemCount: dsDaCapLenh.length,
+                                            itemCount: listlenh.length,
                                             itemBuilder: (context, inde) {
                                               return itemLenhDaCapChoLaiXe(
-                                                  dsDaCapLenh, inde);
+                                                  listlenh, inde);
                                             })
-                                        : Center(
-                                            child: Text('Không có dữ liệu aa'),
-                                          ),
+                                        : index == 2
+                                            ? ListView.builder(
+                                                shrinkWrap: true,
+                                                physics:
+                                                    NeverScrollableScrollPhysics(),
+                                                itemCount: listlenh.length,
+                                                itemBuilder: (context, inde) {
+                                                  return itemLenhDangThucHien(
+                                                      listlenh, inde);
+                                                })
+                                            : index == 3
+                                                ? ListView.builder(
+                                                    shrinkWrap: true,
+                                                    physics:
+                                                        NeverScrollableScrollPhysics(),
+                                                    itemCount: listlenh.length,
+                                                    itemBuilder:
+                                                        (context, inde) {
+                                                      return itemLenhDangThucHien(
+                                                          listlenh, inde);
+                                                    })
+                                                : index == 4
+                                                    ? ListView.builder(
+                                                        shrinkWrap: true,
+                                                        physics:
+                                                            NeverScrollableScrollPhysics(),
+                                                        itemCount:
+                                                            listlenh.length,
+                                                        itemBuilder:
+                                                            (context, inde) {
+                                                          return itemLenhKhongHoanThanh(
+                                                              listlenh, inde);
+                                                        })
+                                                    : Center(
+                                                        child: Text(
+                                                            'Không có dữ liệu aa'),
+                                                      ),
                                 showDSChuyenDi
                                     ? Align(
                                         alignment: Alignment.topCenter,
@@ -749,11 +851,13 @@ class _LenhState extends State<LenhVanChuyen>
                                                     ? SizedBox()
                                                     : GestureDetector(
                                                         onTap: () {
+                                                          setdstoNull();
                                                           setState(() {
+                                                            showDSChuyenDi =
+                                                                !showDSChuyenDi;
                                                             index = inde;
+                                                            loadds();
                                                           });
-                                                          // print(DSChuyenDi[inde].title);
-                                                          // print(dsCDtemp[inde].title);
                                                         },
                                                         child: Container(
                                                           width:
@@ -781,24 +885,26 @@ class _LenhState extends State<LenhVanChuyen>
                                     : SizedBox()
                               ],
                             ),
-                            SizedBox(
-                              width: 150,
-                              child: ElevatedButton(
-                                  onPressed: () {
-                                    setState(() {
-                                      skip += 10;
-                                      loaddskehoach();
-                                      print(requestPayload);
-                                    });
+                            alldata.data.list.length < 10
+                                ? SizedBox()
+                                : SizedBox(
+                                    width: 150,
+                                    child: ElevatedButton(
+                                        onPressed: () {
+                                          setState(() {
+                                            skip += 10;
+                                            loadds();
+                                            print(requestPayload);
+                                          });
 
-                                    // _scrollController.
-                                  },
-                                  child: Text('THÊM',
-                                      style: TextStyle(
-                                        fontFamily: 'Roboto Bold',
-                                        fontSize: 14,
-                                      ))),
-                            )
+                                          // _scrollController.
+                                        },
+                                        child: Text('THÊM',
+                                            style: TextStyle(
+                                              fontFamily: 'Roboto Bold',
+                                              fontSize: 14,
+                                            ))),
+                                  )
                           ],
                         ),
                       ),
@@ -820,12 +926,7 @@ class _LenhState extends State<LenhVanChuyen>
     List<KeHoach> listdata,
     int index,
   ) {
-    var tenlaixetemp = listdata.contains(KeHoach(hoTenPhuXe: 'null'));
-
     var datetemp = DateTime.parse(listdata[index].ngayDuong);
-    List<DanhSachLaiXeThucHien> listtenlaixe =
-        listdata[index].danhSachLaiXeThucHien;
-    // print('ho ten phu xe : ${listtenlaixe.length}');
     return Container(
       // width: widthScreen,
       margin: EdgeInsets.only(right: 18, left: 18, top: 10, bottom: 10),
@@ -1002,7 +1103,8 @@ class _LenhState extends State<LenhVanChuyen>
     );
   }
 
-  Container itemLenhDaCapChoLaiXe(List<DSDaCapLenh> list, int index) {
+  Container itemLenhDaCapChoLaiXe(List<LenhDataDetail> list, int index) {
+    var date = DateTime.parse(list[index].ngayXuatBen);
     return Container(
       margin: EdgeInsets.only(right: 18, left: 18, top: 10, bottom: 10),
       decoration: BoxDecoration(
@@ -1022,7 +1124,7 @@ class _LenhState extends State<LenhVanChuyen>
             child: Column(
               children: [
                 itemListView(
-                    title: '${list[index].lenhvanchuyen}',
+                    title: '${list[index].maSoLenh}',
                     icon: 'asset/icons/script-text-outline.svg',
                     color: Colors.blue,
                     underline: true),
@@ -1030,7 +1132,8 @@ class _LenhState extends State<LenhVanChuyen>
                   height: 8,
                 ),
                 itemListView(
-                    title: '${list[index].datetime}',
+                    title:
+                        '${list[index].gioXuatBen.substring(0, list[index].gioXuatBen.length - 3)} ${date.day}/${date.month}/${date.year}',
                     icon: 'asset/icons/calendar-clock.svg',
                     color: Colors.black,
                     underline: false),
@@ -1038,7 +1141,7 @@ class _LenhState extends State<LenhVanChuyen>
                   height: 8,
                 ),
                 itemListView(
-                    title: '${list[index].biensoxe}',
+                    title: '${list[index].bienSoXe}',
                     icon: 'asset/icons/card-bulleted-outline.svg',
                     color: Colors.black,
                     underline: false),
@@ -1046,8 +1149,7 @@ class _LenhState extends State<LenhVanChuyen>
                   height: 8,
                 ),
                 itemListView(
-                    title:
-                        '${list[index].hanhtrinhchay}(${list[index].sohieuxe})',
+                    title: '${list[index].tenTuyen}\n(${list[index].maTuyen})',
                     icon: 'asset/icons/road-variant.svg',
                     color: Colors.black,
                     underline: false),
@@ -1055,9 +1157,9 @@ class _LenhState extends State<LenhVanChuyen>
                   height: 8,
                 ),
                 itemListView(
-                    title: list[index].tenlaixe.isEmpty
+                    title: list[index].danhSachLaiXe == null
                         ? '(Trống)'
-                        : '${list[index].tenlaixe}',
+                        : '${list[index].danhSachLaiXe.first.hoTen}',
                     icon: 'asset/icons/steering.svg',
                     color: Colors.blue,
                     underline: false),
@@ -1067,7 +1169,6 @@ class _LenhState extends State<LenhVanChuyen>
                 Row(
                   mainAxisSize: MainAxisSize.max,
                   children: [
-                    //  itemListView(list[index].trangthailenh, 'asset/icons/list-status.svg', Colors.green, false),
                     Row(
                       children: [
                         SvgPicture.asset('asset/icons/list-status.svg',
@@ -1075,21 +1176,28 @@ class _LenhState extends State<LenhVanChuyen>
                         SizedBox(
                           width: 10,
                         ),
-                        Text('${list[index].trangthailenh}',
+                        Text('${list[index].tenTrangThaiKyLenh}',
                             maxLines: 10,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                                 color: Colors.green,
                                 fontFamily: 'Roboto Medium',
                                 fontSize: 14)),
-                        Text(' - ',
-                            style: TextStyle(
-                                color: Colors.black,
-                                fontFamily: 'Roboto Medium',
-                                fontSize: 14))
+                        list[index].tenTrangThaiLenh == null ||
+                                list[index].tenTrangThaiLenh.isEmpty
+                            ? ''
+                            : Text(' - ',
+                                style: TextStyle(
+                                    color: Colors.black,
+                                    fontFamily: 'Roboto Medium',
+                                    fontSize: 14))
                       ],
                     ),
-                    Text(list[index].trangthaicho,
+                    Text(
+                        list[index].tenTrangThaiLenh == null ||
+                                list[index].tenTrangThaiLenh.isEmpty
+                            ? ''
+                            : list[index].tenTrangThaiLenh,
                         style: TextStyle(
                             color: Colors.orange,
                             fontFamily: 'Roboto Medium',
@@ -1100,9 +1208,9 @@ class _LenhState extends State<LenhVanChuyen>
                   height: 8,
                 ),
                 itemListView(
-                    title: '${list[index].trangthaibanve}',
+                    title: '${list[index].trangThaiChuyenDiVDT}',
                     icon: 'asset/icons/ticket-confirmation-outline.svg',
-                    color: Colors.red,
+                    color: Colors.green,
                     underline: false),
               ],
             ),
@@ -1139,9 +1247,11 @@ class _LenhState extends State<LenhVanChuyen>
                   thickness: 1,
                 ),
                 InkWell(
-                  onTap: () {
-                    print('giug');
-                  },
+                  onTap: list[index].trangThaiKyLenh == true
+                      ? null
+                      : () {
+                          print('hh');
+                        },
                   hoverColor: Colors.orange,
                   highlightColor: Colors.orange,
                   child: Container(
@@ -1153,7 +1263,9 @@ class _LenhState extends State<LenhVanChuyen>
                               fontFamily: 'Roboto Medium',
                               fontSize: 14,
                               letterSpacing: 1.25,
-                              color: Colors.blue)),
+                              color: list[index].trangThaiKyLenh == true
+                                  ? Colors.grey.withOpacity(0.4)
+                                  : Colors.blue)),
                     ),
                   ),
                 ),
@@ -1164,10 +1276,266 @@ class _LenhState extends State<LenhVanChuyen>
       ),
     );
   }
-}
 
-class FilterCondition {
-  String title;
-  bool sort;
-}
+  Container itemLenhDangThucHien(List<LenhDataDetail> list, int index) {
+    var date = DateTime.parse(list[index].ngayXuatBen);
+    return Container(
+      margin: EdgeInsets.only(right: 18, left: 18, top: 10, bottom: 10),
+      decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+                color: Colors.grey.withOpacity(0.4),
+                offset: Offset(0, 4),
+                blurRadius: 5,
+                spreadRadius: 1)
+          ]),
+      child: Column(
+        children: [
+          Container(
+            padding: EdgeInsets.only(left: 10, right: 10, top: 10),
+            child: Column(
+              children: [
+                itemListView(
+                    title: '${list[index].maSoLenh}',
+                    icon: 'asset/icons/script-text-outline.svg',
+                    color: Colors.blue,
+                    underline: true),
+                SizedBox(
+                  height: 8,
+                ),
+                itemListView(
+                    title:
+                        '${list[index].gioXuatBen.substring(0, list[index].gioXuatBen.length - 3)} ${date.day}/${date.month}/${date.year}',
+                    icon: 'asset/icons/calendar-clock.svg',
+                    color: Colors.black,
+                    underline: false),
+                SizedBox(
+                  height: 8,
+                ),
+                itemListView(
+                    title: '${list[index].bienSoXe}',
+                    icon: 'asset/icons/card-bulleted-outline.svg',
+                    color: Colors.black,
+                    underline: false),
+                SizedBox(
+                  height: 8,
+                ),
+                itemListView(
+                    title: '${list[index].tenTuyen}\n(${list[index].maTuyen})',
+                    icon: 'asset/icons/road-variant.svg',
+                    color: Colors.black,
+                    underline: false),
+                SizedBox(
+                  height: 8,
+                ),
+                itemListView(
+                    title: list[index].danhSachLaiXe == null
+                        ? '(Trống)'
+                        : '${list[index].danhSachLaiXe.first.hoTen}',
+                    icon: 'asset/icons/steering.svg',
+                    color: Colors.blue,
+                    underline: false),
+                SizedBox(
+                  height: 8,
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.max,
+                  children: [
+                    Row(
+                      children: [
+                        SvgPicture.asset('asset/icons/list-status.svg',
+                            width: 24, height: 24),
+                        SizedBox(
+                          width: 10,
+                        ),
+                        Text('${list[index].tenTrangThaiKyLenh}',
+                            maxLines: 10,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                                color: Colors.green,
+                                fontFamily: 'Roboto Medium',
+                                fontSize: 14)),
+                        list[index].tenTrangThaiLenh == null ||
+                                list[index].tenTrangThaiLenh.isEmpty
+                            ? ''
+                            : Text(' - ',
+                                style: TextStyle(
+                                    color: Colors.black,
+                                    fontFamily: 'Roboto Medium',
+                                    fontSize: 14))
+                      ],
+                    ),
+                    Text(
+                        list[index].tenTrangThaiLenh == null ||
+                                list[index].tenTrangThaiLenh.isEmpty
+                            ? ''
+                            : list[index].tenTrangThaiLenh,
+                        style: TextStyle(
+                            color: Colors.orange,
+                            fontFamily: 'Roboto Medium',
+                            fontSize: 14))
+                  ],
+                ),
+                list[index].idTrangThaiLenh == 3
+                    ? SizedBox(
+                        height: 8,
+                      )
+                    : SizedBox(),
+                list[index].idTrangThaiLenh == 3
+                    ? itemListView(
+                        title: list[index].trangThaiChuyenDiVDT,
+                        icon: 'asset/icons/list-status.svg',
+                        color: Colors.green,
+                        underline: false)
+                    : SizedBox(),
+                SizedBox(
+                  height: 8,
+                ),
+                itemListView(
+                    title: '${list[index].trangThaiChuyenDiVDT}',
+                    icon: 'asset/icons/ticket-confirmation-outline.svg',
+                    color: Colors.green,
+                    underline: false),
+              ],
+            ),
+          ),
+          SizedBox(
+            height: 8,
+          ),
+          SizedBox(
+            height: 10,
+          ),
+          Divider(
+            thickness: 1,
+            height: 1,
+          ),
+          list[index].idTrangThaiLenh == 1 || list[index].idTrangThaiLenh == 2
+              ? InkWell(
+                  onTap: () {},
+                  child: Container(
+                    width: (size.width - 53) / 2,
+                    height: 40,
+                    child: Center(
+                      child: Text('HỦY LỆNH',
+                          style: TextStyle(
+                              fontFamily: 'Roboto Medium',
+                              fontSize: 14,
+                              letterSpacing: 1.25,
+                              color: Colors.red)),
+                    ),
+                  ),
+                )
+              : list[index].idTrangThaiLenh == 3
+                  ? InkWell(
+                      onTap: () {},
+                      child: Container(
+                        width: (size.width - 53) / 2,
+                        height: 40,
+                        child: Center(
+                          child: Text('DỪNG HÀNH TRÌNH',
+                              style: TextStyle(
+                                  fontFamily: 'Roboto Medium',
+                                  fontSize: 14,
+                                  letterSpacing: 1.25,
+                                  color: Colors.blue)),
+                        ),
+                      ),
+                    )
+                  : SizedBox()
+        ],
+      ),
+    );
+  }
 
+  Container itemLenhKhongHoanThanh(List<LenhDataDetail> list, int index) {
+    var date = DateTime.parse(list[index].ngayXuatBen);
+    return Container(
+      margin: EdgeInsets.only(right: 18, left: 18, top: 10, bottom: 10),
+      decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+                color: Colors.grey.withOpacity(0.4),
+                offset: Offset(0, 4),
+                blurRadius: 5,
+                spreadRadius: 1)
+          ]),
+      child: Column(
+        children: [
+          Container(
+            padding: EdgeInsets.only(left: 10, right: 10, top: 10),
+            child: Column(
+              children: [
+                itemListView(
+                    title: '${list[index].maSoLenh}',
+                    icon: 'asset/icons/script-text-outline.svg',
+                    color: Colors.blue,
+                    underline: true),
+                SizedBox(
+                  height: 8,
+                ),
+                itemListView(
+                    title:
+                        '${list[index].gioXuatBen.substring(0, list[index].gioXuatBen.length - 3)} ${date.day}/${date.month}/${date.year}',
+                    icon: 'asset/icons/calendar-clock.svg',
+                    color: Colors.black,
+                    underline: false),
+                SizedBox(
+                  height: 8,
+                ),
+                itemListView(
+                    title: '${list[index].bienSoXe}',
+                    icon: 'asset/icons/card-bulleted-outline.svg',
+                    color: Colors.black,
+                    underline: false),
+                SizedBox(
+                  height: 8,
+                ),
+                itemListView(
+                    title: '${list[index].tenTuyen}\n(${list[index].maTuyen})',
+                    icon: 'asset/icons/road-variant.svg',
+                    color: Colors.black,
+                    underline: false),
+                SizedBox(
+                  height: 8,
+                ),
+                itemListView(
+                    title: list[index].danhSachLaiXe == null
+                        ? '(Trống)'
+                        : '${list[index].danhSachLaiXe.first.hoTen}',
+                    icon: 'asset/icons/steering.svg',
+                    color: Colors.blue,
+                    underline: false),
+                SizedBox(
+                  height: 8,
+                ),
+                itemListView(
+                    title: list[index].tenTrangThaiLenh,
+                    icon: 'asset/icons/list-status.svg',
+                    color: Colors.red,
+                    underline: false),
+                SizedBox(
+                  height: 8,
+                ),
+                itemListView(
+                    title: '${list[index].trangThaiChuyenDiVDT}',
+                    icon: 'asset/icons/ticket-confirmation-outline.svg',
+                    color: Colors.green,
+                    underline: false),
+              ],
+            ),
+          ),
+          SizedBox(
+            height: 8,
+          ),
+          SizedBox(
+            height: 10,
+          ),
+        ],
+      ),
+    );
+  }
+}

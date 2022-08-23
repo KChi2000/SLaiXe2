@@ -28,5 +28,9 @@ class servicesAPI{
 class apilenh{
 
   static final apidskehoach = backend_url+'ql-lenh-van-chuyen/api/LenhVanChuyen/danh-sach-ke-hoach';
-  // static final api
+  static final apidsdacaplenh = backend_url + 'ql-lenh-van-chuyen/api/LenhVanChuyen/danh-sach-lenh-da-cap-cho-lai-xe';
+  static final apidslenhdangthuchien = backend_url + 'ql-lenh-van-chuyen/api/LenhVanChuyen/danh-sach-lenh-dang-thuc-hien';
+   static final apidslenhdahoanthanh = backend_url + 'ql-lenh-van-chuyen/api/LenhVanChuyen/danh-sach-lenh-da-hoan-thanh';
+   static final apidslenhkhonghoanthanh = backend_url + 'ql-lenh-van-chuyen/api/LenhVanChuyen/danh-sach-lenh-khong-hoan-thanh';
+   
 }
