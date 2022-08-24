@@ -32,5 +32,5 @@ class apilenh{
   static final apidslenhdangthuchien = backend_url + 'ql-lenh-van-chuyen/api/LenhVanChuyen/danh-sach-lenh-dang-thuc-hien';
    static final apidslenhdahoanthanh = backend_url + 'ql-lenh-van-chuyen/api/LenhVanChuyen/danh-sach-lenh-da-hoan-thanh';
    static final apidslenhkhonghoanthanh = backend_url + 'ql-lenh-van-chuyen/api/LenhVanChuyen/danh-sach-lenh-khong-hoan-thanh';
-   
-}
+   static final apidsluongtuyen = backend_url + 'ql-thong-tin/api/QuanLyThongTin/danh-sach-luong-tuyen-cap-tuyen';
+ }

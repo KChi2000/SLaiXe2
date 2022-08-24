@@ -5,7 +5,8 @@ import 'package:intl/intl.dart';
 import 'package:slaixe2/InnerShadow.dart';
 import 'package:slaixe2/Model/DSChuyendi.dart';
 import 'package:slaixe2/Model/DSLenh.dart';
-
+import 'package:collection/collection.dart';
+import 'package:slaixe2/Model/DSLuongTuyen.dart';
 import 'package:slaixe2/Model/DanhSachKeHoach.dart';
 import 'package:slaixe2/Model/lenhModel.dart';
 import 'package:slaixe2/helpers/ApiHelper.dart';
@@ -20,7 +21,6 @@ import '../extensions/extensions.dart';
 class LenhVanChuyen extends StatefulWidget {
   String idlenh;
   LenhVanChuyen(this.idlenh);
-
   @override
   State<LenhVanChuyen> createState() => _LenhState();
 }
@@ -76,17 +76,19 @@ class _LenhState extends State<LenhVanChuyen>
   String choosefilter = '';
   int stylesort = 0;
   String selector = '';
+  var searchController = TextEditingController();
+  var luongtuyenapi;
+  String trangthaifilter;
   @override
   void initState() {
-      _controller =
+    _controller =
         AnimationController(vsync: this, duration: Duration(milliseconds: 400));
-        _controller.forward(from: 0);
-     _offsetAnimation = Tween<Offset>(
-                          begin: Offset(-1.5, 0.0), end: Offset(0.0, 0.0))
-                      .animate(CurvedAnimation(
-                          parent: _controller, curve: Curves.easeIn));
+    _controller.forward(from: 0);
+    _offsetAnimation = Tween<Offset>(
+            begin: Offset(-1.5, 0.0), end: Offset(0.0, 0.0))
+        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
     super.initState();
-  
+
     loadds();
   }
 
@@ -128,47 +130,100 @@ class _LenhState extends State<LenhVanChuyen>
     checkWhatFilterIs();
 
     setState(() {
-      if (stylesort == 0) {
-        print('fall into if loop');
-        requestPayload = {
-          'custom': {
-            'DenNgay': convertdatetime.toUtc().toIso8601String(),
-            'IdDnvtTuyen': widget.idlenh,
-            'TuNgay': convertdatetime.toUtc().toIso8601String(),
-          },
-          'loadOptions': {
-            'searchOperation': 'contains',
-            'searchValue': null,
-            'skip': skip,
-            'take': 10,
-            'userData': {}
-          },
-        };
+      if (searchController.text == null || searchController.text.isEmpty) {
+        print('search null');
+        if (stylesort == 0) {
+          requestPayload = {
+            'custom': {
+              'DenNgay': convertdatetime.toUtc().toIso8601String(),
+              'IdDnvtTuyen': widget.idlenh,
+              'TuNgay': convertdatetime.toUtc().toIso8601String(),
+            },
+            'loadOptions': {
+              'searchOperation': 'contains',
+              'searchValue': null,
+              'skip': skip,
+              'take': 10,
+              'userData': {}
+            },
+          };
+        } else {
+          requestPayload = {
+            'custom': {
+              'DenNgay': convertdatetime.toUtc().toIso8601String(),
+              'IdDnvtTuyen': widget.idlenh,
+              'TuNgay': convertdatetime.toUtc().toIso8601String(),
+            },
+            'loadOptions': {
+              'searchOperation': 'contains',
+              'searchValue': null,
+              'skip': skip,
+              'sort': stylesort == 2
+                  ? [
+                      {'desc': true, 'selector': selector}
+                    ]
+                  : [
+                      {'desc': false, 'selector': selector}
+                    ],
+              'take': 10,
+              'userData': {}
+            },
+          };
+        }
       } else {
-        print('fall into else');
-        requestPayload = {
-          'custom': {
-            'DenNgay': convertdatetime.toUtc().toIso8601String(),
-            'IdDnvtTuyen': widget.idlenh,
-            'TuNgay': convertdatetime.toUtc().toIso8601String(),
-          },
-          'loadOptions': {
-            'searchOperation': 'contains',
-            'searchValue': null,
-            'skip': skip,
-            'sort': stylesort == 2
-                ? [
-                    {'desc': true, 'selector': selector}
-                  ]
-                : [
-                    {'desc': false, 'selector': selector}
-                  ],
-            'take': 10,
-            'userData': {}
-          },
-        };
+        print('search not null');
+        if (stylesort == 0) {
+          print('fall into if loop');
+          requestPayload = {
+            'custom': {
+              'DenNgay': convertdatetime.toUtc().toIso8601String(),
+              'IdDnvtTuyen': widget.idlenh,
+              'TuNgay': convertdatetime.toUtc().toIso8601String(),
+            },
+            'loadOptions': {
+              'filter': [
+                ["BienSoXe", "contains", searchController.text],
+                "or",
+                ["TenTuyen", "contains", searchController.text]
+              ],
+              'searchOperation': 'contains',
+              'searchValue': null,
+              'skip': skip,
+              'take': 10,
+              'userData': {}
+            },
+          };
+        } else {
+          print('fall into else');
+          requestPayload = {
+            'custom': {
+              'DenNgay': convertdatetime.toUtc().toIso8601String(),
+              'IdDnvtTuyen': widget.idlenh,
+              'TuNgay': convertdatetime.toUtc().toIso8601String(),
+            },
+            'loadOptions': {
+              'filter': [
+                ["BienSoXe", "contains", searchController.text],
+                "or",
+                ["TenTuyen", "contains", searchController.text]
+              ],
+              'searchOperation': 'contains',
+              'searchValue': null,
+              'skip': skip,
+              'sort': stylesort == 2
+                  ? [
+                      {'desc': true, 'selector': selector}
+                    ]
+                  : [
+                      {'desc': false, 'selector': selector}
+                    ],
+              'take': 10,
+              'userData': {}
+            },
+          };
+        }
       }
-      print(requestPayload);
+      print(searchController.text);
     });
     try {
       checkgettypeAPI();
@@ -202,10 +257,18 @@ class _LenhState extends State<LenhVanChuyen>
     }
   }
 
- 
+  void loaddsluongtuyen() async {
+    try {
+      luongtuyenapi = ApiHelper.get(apilenh.apidsluongtuyen);
+    } catch (ex) {
+      luongtuyenapi = null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     size = MediaQuery.of(context).size;
+    trangthaifilter = DSChuyenDi.first.title;
     return Scaffold(
       appBar: AppBar(
         title: wannaSearch
@@ -218,6 +281,7 @@ class _LenhState extends State<LenhVanChuyen>
                       width: 260,
                       // color: Colors.black,
                       child: TextFormField(
+                        controller: searchController,
                         cursorColor: Colors.white,
                         style: TextStyle(
                             color: Colors.white,
@@ -230,284 +294,338 @@ class _LenhState extends State<LenhVanChuyen>
                                 color: Colors.white,
                                 fontFamily: 'Roboto Regular',
                                 fontSize: 14)),
+                        onChanged: (value) {
+                          setdstoNull();
+                          loadds();
+                          print(listlenh.length);
+                        },
                       )),
                 ),
               )
             : SlideTransition(
-              position: _offsetAnimation,
-              child: FadeTransition(
-                   opacity: _controller,
-                    child: Text(
-                      'LỆNH VẬN CHUYỂN',
-                      style: TextStyle(fontSize: 16),
-                    ),
+                position: _offsetAnimation,
+                child: FadeTransition(
+                  opacity: _controller,
+                  child: Text(
+                    'LỆNH VẬN CHUYỂN',
+                    style: TextStyle(fontSize: 16),
                   ),
-            ),
-          
+                ),
+              ),
         centerTitle: !wannaSearch,
         actions: [
           IconButton(
               onPressed: () {
                 setState(() {
                   wannaSearch = !wannaSearch;
-                 
-                  // _opacity = Tween(begin: 0.0, end: 1.0).animate(_controller);
                   _controller.forward(from: 0);
+                  print(listlenh.length);
                 });
               },
               icon: Icon(wannaSearch ? Icons.close : Icons.search)),
           IconButton(
               onPressed: () {
+                loaddsluongtuyen();
                 showModalBottomSheet(
                     context: context,
                     builder: (context) {
                       return StatefulBuilder(builder: (context, setStateModal) {
-                        return Container(
-                          padding: EdgeInsets.all(15),
-                          height: 500,
-                          child: Column(
-                            children: [
-                              SizedBox(
-                                height: 10,
-                              ),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                mainAxisSize: MainAxisSize.max,
-                                children: [
-                                  Container(
-                                    margin: EdgeInsets.only(
-                                        left: size.width * 0.32),
-                                    child: Text('Lọc dữ liệu',
-                                        style: TextStyle(
-                                            fontFamily: 'Roboto Medium',
-                                            fontSize: 18)),
-                                  ),
-                                  Expanded(
-                                    child: Align(
-                                      alignment: Alignment.topRight,
-                                      child: InkWell(
-                                        onTap: () {
-                                          Navigator.pop(context);
-                                        },
-                                        child: IconButton(
-                                            onPressed: () {
-                                              Navigator.pop(context);
-                                            },
-                                            icon: SvgPicture.asset(
-                                                'asset/icons/filter-variant-remove.svg')),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              DropdownButtonFormField(
-                                decoration:
-                                    InputDecoration(labelText: 'Trạng thái(*)'),
-                                items: DSChuyenDi.map((DSChuyendi text) {
-                                  return new DropdownMenuItem(
-                                    child: Container(
-                                        child: Text(text.title,
-                                            style: TextStyle(fontSize: 15))),
-                                    value: text.title,
-                                  );
-                                }).toList(),
-                                hint: Text('Chọn trạng thái',
-                                    style: TextStyle(
-                                        fontFamily: 'Roboto Regular',
-                                        fontSize: 14)),
-                                value: 'Danh sách chuyến đi dự kiến',
-                                onChanged: (t1) {
-                                  setState(() {
-                                    // tinh = t1;
-                                  });
-                                },
-                                validator: (vl1) {
-                                  if (vl1 == null || vl1.isEmpty) {
-                                    return 'Chưa chọn trạng thái';
-                                  }
-                                  return null;
-                                },
-                              ),
-                              SizedBox(
-                                height: 10,
-                              ),
-                              Form(
-                                  key: formkey,
+                        return FutureBuilder(
+                            future: luongtuyenapi,
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return Center(
+                                  child: CircularProgressIndicator(),
+                                );
+                              } else if (snapshot.hasData) {
+                                DSLuongTuyen luongtuyendata =
+                                    DSLuongTuyen.fromJson(snapshot.data);
+                                List<DataLuongTuyen> listluongtuyen =
+                                    luongtuyendata.data;
+                                listluongtuyen.insert(
+                                    0,
+                                    DataLuongTuyen('sdsa', 'vb', 'vcc', 'Tất cả', 'cvc', 'vc',
+                                        0, 'vc', 'cv', 'cv'));
+                                return Container(
+                                  padding: EdgeInsets.all(15),
+                                  // height: 500,
                                   child: Column(
                                     children: [
-                                      TextFormField(
-                                        controller: tungayController,
-                                        decoration: InputDecoration(
-                                          isDense: true,
-                                          labelText: 'Từ ngày(*)',
-                                          suffixIcon: Icon(
-                                            Icons.calendar_month,
-                                            size: 24,
+                                      SizedBox(
+                                        height: 10,
+                                      ),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
+                                        mainAxisSize: MainAxisSize.max,
+                                        children: [
+                                          Container(
+                                            margin: EdgeInsets.only(
+                                                left: size.width * 0.32),
+                                            child: Text('Lọc dữ liệu',
+                                                style: TextStyle(
+                                                    fontFamily: 'Roboto Medium',
+                                                    fontSize: 18)),
                                           ),
-                                        ),
-                                        autovalidateMode:
-                                            AutovalidateMode.onUserInteraction,
-                                        onTap: () async {
-                                          FocusScope.of(context)
-                                              .requestFocus(new FocusNode());
-                                          tungay = await showDatePicker(
-                                              context: context,
-                                              initialDate: tungaytemp,
-                                              firstDate: DateTime(1900),
-                                              lastDate: DateTime(3000));
-                                          if (tungay == null) {
-                                            setState(() {
-                                              tungay = tungaytemp;
-                                            });
-                                          } else {
-                                            tungaytemp = tungay;
-                                          }
-                                          setState(() {
-                                            tungayController.text =
-                                                DateFormat('dd-MM-yyyy')
-                                                    .format(tungay);
+                                          Expanded(
+                                            child: Align(
+                                              alignment: Alignment.topRight,
+                                              child: InkWell(
+                                                onTap: () {
+                                                  Navigator.pop(context);
+                                                },
+                                                child: IconButton(
+                                                    onPressed: () {
+                                                      Navigator.pop(context);
+                                                    },
+                                                    icon: SvgPicture.asset(
+                                                        'asset/icons/filter-variant-remove.svg')),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      DropdownButtonFormField(
+                                        decoration: InputDecoration(
+                                            labelText: 'Trạng thái(*)'),
+                                        items:
+                                            DSChuyenDi.map((DSChuyendi text) {
+                                          return new DropdownMenuItem(
+                                            child: Container(
+                                                child: Text(text.title,
+                                                    style: TextStyle(
+                                                        fontSize: 15))),
+                                            value: text.title,
+                                          );
+                                        }).toList(),
+                                        hint: Text('Chọn trạng thái',
+                                            style: TextStyle(
+                                                fontFamily: 'Roboto Regular',
+                                                fontSize: 14)),
+                                        value: 'Danh sách chuyến đi dự kiến',
+                                        onChanged: (t1) {
+                                          setStateModal(() {
+                                           trangthaifilter = t1;
                                           });
                                         },
-                                        validator: (value) {
-                                          if (tungay.day < DateTime.now().day) {
-                                            checkError = true;
-
-                                            return 'Ký từ ngày không được nhỏ hơn ngày hiện tại';
-                                          } else if (tungay.day > denngay.day) {
-                                            checkError = true;
-
-                                            return 'Ký từ ngày không được nhỏ hơn Ký đến ngày';
-                                          } else {
-                                            checkError = false;
-
-                                            return null;
+                                        validator: (vl1) {
+                                          if (vl1 == null || vl1.isEmpty) {
+                                            return 'Chưa chọn trạng thái';
                                           }
+                                          return null;
                                         },
                                       ),
                                       SizedBox(
                                         height: 10,
                                       ),
-                                      TextFormField(
-                                        controller: denngayController,
+                                      Form(
+                                          key: formkey,
+                                          child: Column(
+                                            children: [
+                                              TextFormField(
+                                                controller: tungayController,
+                                                decoration: InputDecoration(
+                                                  isDense: true,
+                                                  labelText: 'Từ ngày(*)',
+                                                  suffixIcon: Icon(
+                                                    Icons.calendar_month,
+                                                    size: 24,
+                                                  ),
+                                                ),
+                                                autovalidateMode:
+                                                    AutovalidateMode
+                                                        .onUserInteraction,
+                                                onTap: () async {
+                                                  FocusScope.of(context)
+                                                      .requestFocus(
+                                                          new FocusNode());
+                                                  tungay = await showDatePicker(
+                                                      context: context,
+                                                      initialDate: tungaytemp,
+                                                      firstDate: DateTime(1900),
+                                                      lastDate: DateTime(3000));
+                                                  if (tungay == null) {
+                                                    setState(() {
+                                                      tungay = tungaytemp;
+                                                    });
+                                                  } else {
+                                                    tungaytemp = tungay;
+                                                  }
+                                                  setState(() {
+                                                    tungayController.text =
+                                                        DateFormat('dd-MM-yyyy')
+                                                            .format(tungay);
+                                                  });
+                                                },
+                                                // validator: (value) {
+                                                //   if (tungay.day < DateTime.now().day) {
+                                                //     checkError = true;
+
+                                                //     return 'Ký từ ngày không được nhỏ hơn ngày hiện tại';
+                                                //   } else if (tungay.day > denngay.day) {
+                                                //     checkError = true;
+
+                                                //     return 'Ký từ ngày không được nhỏ hơn Ký đến ngày';
+                                                //   } else {
+                                                //     checkError = false;
+
+                                                //     return null;
+                                                //   }
+                                                // },
+                                              ),
+                                              SizedBox(
+                                                height: 10,
+                                              ),
+                                              TextFormField(
+                                                controller: denngayController,
+                                                decoration: InputDecoration(
+                                                  isDense: true,
+                                                  labelText: 'Đến ngày(*)',
+                                                  suffixIcon: Icon(
+                                                    Icons.calendar_month,
+                                                    size: 24,
+                                                  ),
+                                                ),
+                                                autovalidateMode:
+                                                    AutovalidateMode
+                                                        .onUserInteraction,
+                                                onTap: () async {
+                                                  FocusScope.of(context)
+                                                      .requestFocus(
+                                                          new FocusNode());
+                                                  denngay =
+                                                      await showDatePicker(
+                                                          context: context,
+                                                          initialDate:
+                                                              denngaytemp,
+                                                          firstDate:
+                                                              DateTime(1900),
+                                                          lastDate:
+                                                              DateTime(3000));
+                                                  if (denngay == null) {
+                                                    denngay = denngaytemp;
+                                                  } else {
+                                                    denngaytemp = denngay;
+                                                  }
+                                                  setState(() {
+                                                    denngayController.text =
+                                                        DateFormat('dd-MM-yyyy')
+                                                            .format(denngay);
+                                                  });
+                                                },
+                                                validator: (value) {
+                                                  if (denngay.day < tungay.day) {
+                                                    checkError = true;
+
+                                                    return 'Ký đến ngày không được nhỏ hơn Ký từ ngày';
+                                                  } else {
+                                                    checkError = false;
+
+                                                    return null;
+                                                  }
+                                                },
+                                              ),
+                                            ],
+                                          )),
+                                      SizedBox(
+                                        height: 10,
+                                      ),
+                                      DropdownButtonFormField(
+                                        menuMaxHeight: 300,
                                         decoration: InputDecoration(
-                                          isDense: true,
-                                          labelText: 'Đến ngày(*)',
-                                          suffixIcon: Icon(
-                                            Icons.calendar_month,
-                                            size: 24,
-                                          ),
-                                        ),
-                                        autovalidateMode:
-                                            AutovalidateMode.onUserInteraction,
-                                        onTap: () async {
-                                          FocusScope.of(context)
-                                              .requestFocus(new FocusNode());
-                                          denngay = await showDatePicker(
-                                              context: context,
-                                              initialDate: denngaytemp,
-                                              firstDate: DateTime(1900),
-                                              lastDate: DateTime(3000));
-                                          if (denngay == null) {
-                                            denngay = denngaytemp;
-                                          } else {
-                                            denngaytemp = denngay;
-                                          }
+                                            labelText: 'Tuyến vận chuyển'),
+                                        items: listluongtuyen.map((text) {
+                                          return new DropdownMenuItem(
+                                            child: Container(
+                                                // width: 200,
+                                                child: Row(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    Text('${text.tenTuyen}',
+                                                        style: TextStyle(
+                                                            fontSize: 14,fontFamily: 'Roboto Regular')),
+                                                  ],
+                                                )),
+                                            value: text.idDnvtTuyen,
+                                          );
+                                        }).toList(),
+                                        // value: 'Tất cả',
+                                        onChanged: (t1) {
                                           setState(() {
-                                            denngayController.text =
-                                                DateFormat('dd-MM-yyyy')
-                                                    .format(denngay);
+                                            // tinh = t1;
                                           });
                                         },
-                                        validator: (value) {
-                                          if (denngay.day < tungay.day) {
-                                            checkError = true;
-
-                                            return 'Ký đến ngày không được nhỏ hơn Ký từ ngày';
-                                          } else {
-                                            checkError = false;
-
-                                            return null;
+                                        hint: Text('Chọn tuyến vận chuyển',
+                                            style: TextStyle(
+                                                fontFamily: 'Roboto Regular',
+                                                fontSize: 14)),
+                                        validator: (vl1) {
+                                          if (vl1 == null || vl1.isEmpty) {
+                                            return 'Chưa chọn trạng thái';
                                           }
+                                          return null;
                                         },
                                       ),
-                                    ],
-                                  )),
-                              SizedBox(
-                                height: 10,
-                              ),
-                              DropdownButtonFormField(
-                                decoration: InputDecoration(
-                                    labelText: 'Tuyến vận chuyển'),
-                                items: dsTuyenVanChuyen.map((text) {
-                                  return new DropdownMenuItem(
-                                    child: Container(
-                                        child: Text(text,
-                                            style: TextStyle(fontSize: 15))),
-                                    value: text,
-                                  );
-                                }).toList(),
-                                value: 'Tất cả',
-                                onChanged: (t1) {
-                                  setState(() {
-                                    // tinh = t1;
-                                  });
-                                },
-                                hint: Text('Chọn tuyến vận chuyển',
-                                    style: TextStyle(
-                                        fontFamily: 'Roboto Regular',
-                                        fontSize: 14)),
-                                menuMaxHeight: 200,
-                                validator: (vl1) {
-                                  if (vl1 == null || vl1.isEmpty) {
-                                    return 'Chưa chọn trạng thái';
-                                  }
-                                  return null;
-                                },
-                              ),
-                              SizedBox(
-                                height: 15,
-                              ),
-                              Container(
-                                padding: EdgeInsets.symmetric(horizontal: 25),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    InkWell(
-                                      onTap: () {
-                                        Navigator.pop(context);
-                                      },
-                                      child: Text(
-                                        'HỦY',
-                                        style: TextStyle(
-                                            fontFamily: 'Roboto Medium',
-                                            fontSize: 14,
-                                            letterSpacing: 1.25,
-                                            color: HexColor.fromHex('#D10909')),
+                                      SizedBox(
+                                        height: 15,
                                       ),
-                                    ),
-                                    ElevatedButton(
-                                        onPressed: !checkError
-                                            ? () {
-                                                print(tungay.day <
-                                                    DateTime.now().day);
-                                              }
-                                            : null,
-                                        child: Text(
-                                          'XÁC NHẬN',
-                                          style: TextStyle(
-                                              fontFamily: 'Roboto Medium',
-                                              fontSize: 14,
-                                              letterSpacing: 1.25,
-                                              color: Colors.white),
-                                        )),
-                                  ],
-                                ),
-                              )
-                            ],
-                          ),
-                        );
+                                      Container(
+                                        padding: EdgeInsets.symmetric(
+                                            horizontal: 25),
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            InkWell(
+                                              onTap: () {
+                                                Navigator.pop(context);
+                                              },
+                                              child: Text(
+                                                'HỦY',
+                                                style: TextStyle(
+                                                    fontFamily: 'Roboto Medium',
+                                                    fontSize: 14,
+                                                    letterSpacing: 1.25,
+                                                    color: HexColor.fromHex(
+                                                        '#D10909')),
+                                              ),
+                                            ),
+                                            ElevatedButton(
+                                                onPressed: !checkError
+                                                    ? () {
+                                                      Navigator.pop(context);
+                                                        print(tungayController.text);
+                                                        print(denngayController.text);
+                                                        print(denngay.toUtc().toIso8601String());
+                                                        print(denngay);
+                                                        setState((){
+                                                          index = 1;
+                                                        });
+                                                      }
+                                                    : null,
+                                                child: Text(
+                                                  'XÁC NHẬN',
+                                                  style: TextStyle(
+                                                      fontFamily:
+                                                          'Roboto Medium',
+                                                      fontSize: 14,
+                                                      letterSpacing: 1.25,
+                                                      color: Colors.white),
+                                                )),
+                                          ],
+                                        ),
+                                      )
+                                    ],
+                                  ),
+                                );
+                              }
+                              return Center(
+                                child: Text(''),
+                              );
+                            });
                       });
                     });
               },
@@ -625,7 +743,6 @@ class _LenhState extends State<LenhVanChuyen>
               onTap: () {
                 setState(() {
                   showDSChuyenDi = !showDSChuyenDi;
-                  print(showDSChuyenDi);
                 });
               },
               child: Container(
@@ -674,98 +791,51 @@ class _LenhState extends State<LenhVanChuyen>
                 ),
               ),
             ),
-            FutureBuilder(
-                future: dslistfuture,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Expanded(
-                        child: Center(
-                      child: CircularProgressIndicator(),
-                    ));
-                  } else if (snapshot.hasError) {
-                    return Text('${snapshot.error}');
-                  } else if (snapshot.hasData) {
-                    var alldata;
-                    if (index == 0) {
-                      alldata = DanhSachKeHoach.fromJson(snapshot.data);
-                      listkehoach.addAll(alldata.data.list);
-                    } else {
-                      alldata = dsLenh.fromJson(snapshot.data);
-                      listlenh.addAll(alldata.data.list);
-                    }
-                    if (alldata.data.list.length == 0) {
-                      return Expanded(
-                        child: Container(
-                          child: Stack(
-                            children: [
-                              Center(
-                                  child: Text('Không có dữ liệu !'),
-                                ),
-                             
-                              showDSChuyenDi
-                                  ? Align(
-                                      alignment: Alignment.topCenter,
-                                      child: Container(
-                                        width: size.width * 0.9,
-                                        height: 155,
-                                        decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            boxShadow: [
-                                              BoxShadow(
-                                                  offset: Offset(0, 5),
-                                                  color:
-                                                      Colors.grey.withOpacity(0.3),
-                                                  spreadRadius: 2,
-                                                  blurRadius: 5)
-                                            ]),
-                                        child: ListView.builder(
-                                            itemCount: dsCDtemp.length,
-                                            itemBuilder: (context, inde) {
-                                              return DSChuyenDi[index].title ==
-                                                      dsCDtemp[inde].title
-                                                  ? SizedBox()
-                                                  : GestureDetector(
-                                                      onTap: () {
-                                                        setdstoNull();
-                                                        setState(() {
-                                                          showDSChuyenDi =
-                                                              !showDSChuyenDi;
-                                                          index = inde;
-                                                          loadds();
-                                                        });
-                                                      },
-                                                      child: Container(
-                                                        width: size.width * 0.9,
-                                                        height: 40,
-                                                        child: Center(
-                                                          child: Text(
-                                                              dsCDtemp[inde].title,
-                                                              style: TextStyle(
-                                                                color:
-                                                                    dsCDtemp[inde]
-                                                                        .color,
-                                                                fontFamily:
-                                                                    'Roboto Bold',
-                                                                fontSize: 14,
-                                                              )),
-                                                        ),
-                                                      ),
-                                                    );
-                                            }),
-                                      ),
-                                    )
-                                  : SizedBox()
-                            ],
-                          ),
-                        ),
-                      );
-                    }
-                    return Expanded(
-                      child: SingleChildScrollView(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.max,
-                          children: [
-                            Stack(
+            Expanded(
+              child: Stack(
+                children: [
+                  FutureBuilder(
+                      future: dslistfuture,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        } else if (snapshot.hasError) {
+                          return Text('${snapshot.error}');
+                        } else if (snapshot.hasData) {
+                          print('chay qua day');
+                          print(skip);
+                          var alldata;
+                          List<KeHoach> listkehoachtemp = [];
+                          List<LenhDataDetail> listlenhtemp = [];
+                          var seen = Set<String>();
+
+                          if (index == 0) {
+                            alldata = DanhSachKeHoach.fromJson(snapshot.data);
+                            listkehoachtemp.addAll(alldata.data.list);
+                            listkehoach = listkehoachtemp
+                                .where((element) => seen.add(element.iDKeHoach))
+                                .toList();
+                          } else {
+                            alldata = dsLenh.fromJson(snapshot.data);
+                            listlenhtemp.addAll(alldata.data.list);
+                            listlenh = listlenhtemp
+                                .where(
+                                    (element) => seen.add(element.idLenhDienTu))
+                                .toList();
+                          }
+
+                          if (alldata.data.list.length == 0) {
+                            return Center(
+                              child: Text('Không có dữ liệu !'),
+                            );
+                          }
+
+                          return SingleChildScrollView(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.max,
                               children: [
                                 index == 0
                                     ? ListView.builder(
@@ -822,100 +892,84 @@ class _LenhState extends State<LenhVanChuyen>
                                                           return itemLenhKhongHoanThanh(
                                                               listlenh, inde);
                                                         })
-                                                    : Center(
-                                                        child: Text(
-                                                            'Không có dữ liệu aa'),
-                                                      ),
-                                showDSChuyenDi
-                                    ? Align(
-                                        alignment: Alignment.topCenter,
-                                        child: Container(
-                                          width: size.width * 0.9,
-                                          height: 155,
-                                          decoration: BoxDecoration(
-                                              color: Colors.white,
-                                              boxShadow: [
-                                                BoxShadow(
-                                                    offset: Offset(0, 5),
-                                                    color: Colors.grey
-                                                        .withOpacity(0.3),
-                                                    spreadRadius: 2,
-                                                    blurRadius: 5)
-                                              ]),
-                                          child: ListView.builder(
-                                              itemCount: dsCDtemp.length,
-                                              itemBuilder: (context, inde) {
-                                                return DSChuyenDi[index]
-                                                            .title ==
-                                                        dsCDtemp[inde].title
-                                                    ? SizedBox()
-                                                    : GestureDetector(
-                                                        onTap: () {
-                                                          setdstoNull();
-                                                          setState(() {
-                                                            showDSChuyenDi =
-                                                                !showDSChuyenDi;
-                                                            index = inde;
-                                                            loadds();
-                                                          });
-                                                        },
-                                                        child: Container(
-                                                          width:
-                                                              size.width * 0.9,
-                                                          height: 40,
-                                                          child: Center(
-                                                            child: Text(
-                                                                dsCDtemp[inde]
-                                                                    .title,
-                                                                style:
-                                                                    TextStyle(
-                                                                  color: dsCDtemp[
-                                                                          inde]
-                                                                      .color,
-                                                                  fontFamily:
-                                                                      'Roboto Bold',
-                                                                  fontSize: 14,
-                                                                )),
-                                                          ),
-                                                        ),
-                                                      );
-                                              }),
-                                        ),
+                                                    : SizedBox(),
+                                alldata.data.list.length < 10
+                                    ? SizedBox()
+                                    : SizedBox(
+                                        width: 150,
+                                        child: ElevatedButton(
+                                            onPressed: () {
+                                              setState(() {
+                                                skip += 10;
+                                                loadds();
+                                                print(requestPayload);
+                                              });
+
+                                              // _scrollController.
+                                            },
+                                            child: Text('THÊM',
+                                                style: TextStyle(
+                                                  fontFamily: 'Roboto Bold',
+                                                  fontSize: 14,
+                                                ))),
                                       )
-                                    : SizedBox()
                               ],
                             ),
-                            alldata.data.list.length < 10
-                                ? SizedBox()
-                                : SizedBox(
-                                    width: 150,
-                                    child: ElevatedButton(
-                                        onPressed: () {
-                                          setState(() {
-                                            skip += 10;
-                                            loadds();
-                                            print(requestPayload);
-                                          });
-
-                                          // _scrollController.
-                                        },
-                                        child: Text('THÊM',
-                                            style: TextStyle(
-                                              fontFamily: 'Roboto Bold',
-                                              fontSize: 14,
-                                            ))),
-                                  )
-                          ],
-                        ),
-                      ),
-                    );
-                  }
-                  return Expanded(
-                    child: Center(
-                      child: Text('Không có dữ liệu'),
-                    ),
-                  );
-                })
+                          );
+                        }
+                        return Center(
+                          child: Text('Không có dữ liệu'),
+                        );
+                      }),
+                  showDSChuyenDi
+                      ? Align(
+                          alignment: Alignment.topCenter,
+                          child: Container(
+                            width: size.width * 0.9,
+                            height: 155,
+                            decoration:
+                                BoxDecoration(color: Colors.white, boxShadow: [
+                              BoxShadow(
+                                  offset: Offset(0, 5),
+                                  color: Colors.grey.withOpacity(0.3),
+                                  spreadRadius: 2,
+                                  blurRadius: 5)
+                            ]),
+                            child: ListView.builder(
+                                itemCount: dsCDtemp.length,
+                                itemBuilder: (context, inde) {
+                                  return DSChuyenDi[index].title ==
+                                          dsCDtemp[inde].title
+                                      ? SizedBox()
+                                      : GestureDetector(
+                                          onTap: () {
+                                            setdstoNull();
+                                            setState(() {
+                                              showDSChuyenDi = !showDSChuyenDi;
+                                              index = inde;
+                                              loadds();
+                                            });
+                                          },
+                                          child: Container(
+                                            width: size.width * 0.9,
+                                            height: 40,
+                                            child: Center(
+                                              child: Text(dsCDtemp[inde].title,
+                                                  style: TextStyle(
+                                                    color: dsCDtemp[inde].color,
+                                                    fontFamily: 'Roboto Bold',
+                                                    fontSize: 14,
+                                                  )),
+                                            ),
+                                          ),
+                                        );
+                                }),
+                          ),
+                        )
+                      : SizedBox()
+                ],
+              ),
+            )
           ],
         ),
       ),
