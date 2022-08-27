@@ -25,12 +25,28 @@ class servicesAPI{
   static final API_BaseUrl = backend_url + 'be_api/chuyendi/';
   static final API_BenXe = backend_url + 'be_api/benxe/';
 }
+final qllenhurl = 'ql-lenh-van-chuyen/api/LenhVanChuyen/';
 class apilenh{
 
-  static final apidskehoach = backend_url+'ql-lenh-van-chuyen/api/LenhVanChuyen/danh-sach-ke-hoach';
-  static final apidsdacaplenh = backend_url + 'ql-lenh-van-chuyen/api/LenhVanChuyen/danh-sach-lenh-da-cap-cho-lai-xe';
-  static final apidslenhdangthuchien = backend_url + 'ql-lenh-van-chuyen/api/LenhVanChuyen/danh-sach-lenh-dang-thuc-hien';
-   static final apidslenhdahoanthanh = backend_url + 'ql-lenh-van-chuyen/api/LenhVanChuyen/danh-sach-lenh-da-hoan-thanh';
-   static final apidslenhkhonghoanthanh = backend_url + 'ql-lenh-van-chuyen/api/LenhVanChuyen/danh-sach-lenh-khong-hoan-thanh';
+  static final apidskehoach = backend_url+qllenhurl+'danh-sach-ke-hoach';
+  static final apidsdacaplenh = backend_url + qllenhurl+'danh-sach-lenh-da-cap-cho-lai-xe';
+  static final apidslenhdangthuchien = backend_url + qllenhurl+'danh-sach-lenh-dang-thuc-hien';
+   static final apidslenhdahoanthanh = backend_url + qllenhurl+'danh-sach-lenh-da-hoan-thanh';
+   static final apidslenhkhonghoanthanh = backend_url + qllenhurl+'danh-sach-lenh-khong-hoan-thanh';
    static final apidsluongtuyen = backend_url + 'ql-thong-tin/api/QuanLyThongTin/danh-sach-luong-tuyen-cap-tuyen';
+   
+ }
+ class apiSuaKeHoach{
+  static String apidsxedukien(String idkehoach){
+    final url = backend_url+qllenhurl+'Danh-Sach-Xe-Du-Kien-Theo-Ke-Hoach?IdKeHoach=$idkehoach';
+    return url;
+  }
+  static String apidslaixedukien(String idkehoach){
+    final url = backend_url+qllenhurl+'Danh-Sach-Lai-Xe-Du-Kien-Theo-Ke-Hoach?IdKeHoach=$idkehoach';
+    return url;
+  }
+   static String apidchitietkehoach(String tungay,String denngay,String idkehoach){
+    final url = backend_url+qllenhurl+'Chi-Tiet-Ke-Hoach?TuNgay=$tungay&DenNgay=$denngay&idKeHoach=$idkehoach';
+    return url;
+  }
  }

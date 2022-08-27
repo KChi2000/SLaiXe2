@@ -4,12 +4,23 @@ import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:intl/intl.dart';
 import 'package:slaixe2/Model/ChuyenDiTrongNgay.dart';
-
+import 'package:slaixe2/servicesAPI.dart';
+import '../Model/ChiTietKeHoach.dart';
+import '../Model/DSLaiXeDuKienTheoKeHoach.dart';
+import '../Model/DSXeDuKienTheoKeHoach.dart';
 import '../extensions/extensions.dart';
+import '../helpers/ApiHelper.dart';
 
 class KiLenh extends StatefulWidget {
-  const KiLenh({Key key}) : super(key: key);
 
+ KiLenh(this.time, this.lotrinh, this.tenbenxedi, this.idkehoach,
+      this.tungay, this.denngay);
+  String time;
+  String lotrinh;
+  String tenbenxedi;
+  String idkehoach;
+  String tungay;
+  String denngay;
   @override
   State<KiLenh> createState() => _KiLenhState();
 }
@@ -43,12 +54,23 @@ class _KiLenhState extends State<KiLenh> {
     ChuyenDiTrongNgay('Thứ 7', '15/09/2022', '18/7', false)
   ];
   List<ChuyenDiTrongNgay> listCDTemp = [];
+  DSXeDuKienTheoKeHoach datadsxedukientheokehoach;
+  DSLaiXeDuKienTheoKeHoach datadslaixedukientheokehoach;
+  ChiTietKeHoach datachitietkehoach;
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
   }
-
+ Future loadapi() async {
+    datadsxedukientheokehoach = DSXeDuKienTheoKeHoach.fromJson(
+        await ApiHelper.get(apiSuaKeHoach.apidsxedukien(widget.idkehoach)));
+    datadslaixedukientheokehoach = DSLaiXeDuKienTheoKeHoach.fromJson(
+        await ApiHelper.get(apiSuaKeHoach.apidslaixedukien(widget.idkehoach)));
+    datachitietkehoach = ChiTietKeHoach.fromJson(await ApiHelper.get(
+        apiSuaKeHoach.apidchitietkehoach(
+            widget.tungay, widget.denngay, widget.idkehoach)));
+  }
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
@@ -60,7 +82,18 @@ class _KiLenhState extends State<KiLenh> {
             )),
         centerTitle: true,
       ),
-      body: Column(
+      body: FutureBuilder(future: loadapi(),builder: (context,snapshot){
+        if(snapshot.connectionState == ConnectionState.waiting){
+               return Center(
+              child: CircularProgressIndicator(),
+            );
+        }else if(datadsxedukientheokehoach.data != null &&
+              datadslaixedukientheokehoach != null &&
+              datachitietkehoach.data != null &&
+              datadsxedukientheokehoach.message == 'Thành công' &&
+              datadslaixedukientheokehoach.message == 'Thành công' &&
+              datachitietkehoach.message == 'Thành công'){
+           return Column(
         children: [
           Expanded(
             child: SingleChildScrollView(
@@ -288,13 +321,15 @@ class _KiLenhState extends State<KiLenh> {
                     SizedBox(
                       height: 10,
                     ),
-                    ListView.builder(
+                    StatefulBuilder(builder: (context,setState){
+                      return ListView.builder(
                         shrinkWrap: true,
                         physics: NeverScrollableScrollPhysics(),
                         itemCount: dsCDTrongNgay.length,
                         itemBuilder: (context, index) {
-                          return itemListCD(index, size);
-                        }),
+                          return itemListCD(index, size,setState);
+                        });
+                    })
                   ],
                 ),
               ),
@@ -340,11 +375,18 @@ class _KiLenhState extends State<KiLenh> {
             ),
           )
         ],
-      ),
+      );
+        }
+        return Center(
+              child: Text(
+            'Không có dữ liệu',
+            style: TextStyle(fontFamily: 'Roboto Regular', fontSize: 14),
+          ));
+      },),
     );
   }
 
-  Row itemListCD(int index, Size size) {
+  Row itemListCD(int index, Size size,Function(void Function()) setState) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       mainAxisAlignment: MainAxisAlignment.center,

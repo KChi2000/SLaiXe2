@@ -32,12 +32,19 @@ class _LenhState extends State<LenhVanChuyen>
   bool checkError = false;
   bool showDSChuyenDi = false;
   final formkey = GlobalKey<FormState>();
-  DateTime tungay = DateTime.now();
-  DateTime tungaytemp = DateTime.now();
+  final tuyenvanchuyenkey = GlobalKey<FormState>();
+
+  DateTime tungay = DateTime(
+      DateTime.now().year, DateTime.now().month, DateTime.now().day, 0, 0, 0);
+  DateTime tungaytemp = DateTime(
+      DateTime.now().year, DateTime.now().month, DateTime.now().day, 0, 0, 0);
+  DateTime denngay = DateTime(
+      DateTime.now().year, DateTime.now().month, DateTime.now().day, 0, 0, 0);
+  DateTime denngaytemp = DateTime(
+      DateTime.now().year, DateTime.now().month, DateTime.now().day, 0, 0, 0);
   final tungayController = TextEditingController(
       text: DateFormat('dd-MM-yyyy').format(DateTime.now()));
-  DateTime denngay = DateTime.now();
-  DateTime denngaytemp = DateTime.now();
+
   final denngayController = TextEditingController(
       text: DateFormat('dd-MM-yyyy').format(DateTime.now()));
   int index = 0;
@@ -79,6 +86,10 @@ class _LenhState extends State<LenhVanChuyen>
   var searchController = TextEditingController();
   var luongtuyenapi;
   String trangthaifilter;
+  String tuyenvanchuyenfilter = '';
+  bool canAddMore = false;
+  ScrollController _scrollController;
+  double currentScroll = 0.0;
   @override
   void initState() {
     _controller =
@@ -87,9 +98,16 @@ class _LenhState extends State<LenhVanChuyen>
     _offsetAnimation = Tween<Offset>(
             begin: Offset(-1.5, 0.0), end: Offset(0.0, 0.0))
         .animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
+    _scrollController = ScrollController();
     super.initState();
-
+    tuyenvanchuyenfilter = widget.idlenh;
     loadds();
+  }
+
+  int daysBetween(DateTime from, DateTime to) {
+    from = DateTime(from.year, from.month, from.day);
+    to = DateTime(to.year, to.month, to.day);
+    return (to.difference(from).inHours / 24).round();
   }
 
   void setdstoNull() {
@@ -128,102 +146,42 @@ class _LenhState extends State<LenhVanChuyen>
 
   void loadds() async {
     checkWhatFilterIs();
-
     setState(() {
-      if (searchController.text == null || searchController.text.isEmpty) {
-        print('search null');
-        if (stylesort == 0) {
-          requestPayload = {
-            'custom': {
-              'DenNgay': convertdatetime.toUtc().toIso8601String(),
-              'IdDnvtTuyen': widget.idlenh,
-              'TuNgay': convertdatetime.toUtc().toIso8601String(),
-            },
-            'loadOptions': {
-              'searchOperation': 'contains',
-              'searchValue': null,
-              'skip': skip,
-              'take': 10,
-              'userData': {}
-            },
-          };
-        } else {
-          requestPayload = {
-            'custom': {
-              'DenNgay': convertdatetime.toUtc().toIso8601String(),
-              'IdDnvtTuyen': widget.idlenh,
-              'TuNgay': convertdatetime.toUtc().toIso8601String(),
-            },
-            'loadOptions': {
-              'searchOperation': 'contains',
-              'searchValue': null,
-              'skip': skip,
-              'sort': stylesort == 2
-                  ? [
-                      {'desc': true, 'selector': selector}
-                    ]
-                  : [
-                      {'desc': false, 'selector': selector}
-                    ],
-              'take': 10,
-              'userData': {}
-            },
-          };
-        }
-      } else {
-        print('search not null');
-        if (stylesort == 0) {
-          print('fall into if loop');
-          requestPayload = {
-            'custom': {
-              'DenNgay': convertdatetime.toUtc().toIso8601String(),
-              'IdDnvtTuyen': widget.idlenh,
-              'TuNgay': convertdatetime.toUtc().toIso8601String(),
-            },
-            'loadOptions': {
-              'filter': [
-                ["BienSoXe", "contains", searchController.text],
-                "or",
-                ["TenTuyen", "contains", searchController.text]
-              ],
-              'searchOperation': 'contains',
-              'searchValue': null,
-              'skip': skip,
-              'take': 10,
-              'userData': {}
-            },
-          };
-        } else {
-          print('fall into else');
-          requestPayload = {
-            'custom': {
-              'DenNgay': convertdatetime.toUtc().toIso8601String(),
-              'IdDnvtTuyen': widget.idlenh,
-              'TuNgay': convertdatetime.toUtc().toIso8601String(),
-            },
-            'loadOptions': {
-              'filter': [
-                ["BienSoXe", "contains", searchController.text],
-                "or",
-                ["TenTuyen", "contains", searchController.text]
-              ],
-              'searchOperation': 'contains',
-              'searchValue': null,
-              'skip': skip,
-              'sort': stylesort == 2
-                  ? [
-                      {'desc': true, 'selector': selector}
-                    ]
-                  : [
-                      {'desc': false, 'selector': selector}
-                    ],
-              'take': 10,
-              'userData': {}
-            },
-          };
-        }
+      var filters = [];
+      var sorts = [];
+
+      if (searchController.text != null && !searchController.text.isEmpty) {
+        filters.addAll([
+          ["BienSoXe", "contains", searchController.text],
+          "or",
+          ["TenTuyen", "contains", searchController.text]
+        ]);
       }
-      print(searchController.text);
+
+      if (stylesort == 1) {
+        sorts.add({'desc': false, 'selector': selector});
+      } else if (stylesort == 2) {
+        sorts.add({'desc': true, 'selector': selector});
+      }
+
+      requestPayload = {
+        'custom': {
+          'DenNgay': denngay.toUtc().toIso8601String(),
+          'IdDnvtTuyen': tuyenvanchuyenfilter,
+          'TuNgay': tungay.toUtc().toIso8601String(),
+        },
+        'loadOptions': {
+          'filter': filters,
+          'searchOperation': 'contains',
+          'searchValue': null,
+          'skip': skip,
+          'sort': sorts,
+          'take': 10,
+          'userData': {}
+        },
+      };
+
+      // print(searchController.text);
     });
     try {
       checkgettypeAPI();
@@ -268,7 +226,7 @@ class _LenhState extends State<LenhVanChuyen>
   @override
   Widget build(BuildContext context) {
     size = MediaQuery.of(context).size;
-    trangthaifilter = DSChuyenDi.first.title;
+
     return Scaffold(
       appBar: AppBar(
         title: wannaSearch
@@ -297,7 +255,6 @@ class _LenhState extends State<LenhVanChuyen>
                         onChanged: (value) {
                           setdstoNull();
                           loadds();
-                          print(listlenh.length);
                         },
                       )),
                 ),
@@ -319,17 +276,31 @@ class _LenhState extends State<LenhVanChuyen>
                 setState(() {
                   wannaSearch = !wannaSearch;
                   _controller.forward(from: 0);
-                  print(listlenh.length);
                 });
+                if(!wannaSearch && searchController.text != null && !searchController.text.isEmpty){
+                
+                  setState(() {
+                    searchController = TextEditingController(text: '');
+                    loadds();
+                  });
+                }
               },
               icon: Icon(wannaSearch ? Icons.close : Icons.search)),
           IconButton(
               onPressed: () {
+                denngaytemp = denngay;
+                tungaytemp = tungay;
+
+                denngayController.text =
+                    DateFormat('dd-MM-yyyy').format(denngay);
+                tungayController.text = DateFormat('dd-MM-yyyy').format(tungay);
+                trangthaifilter = DSChuyenDi[index].title;
+
                 loaddsluongtuyen();
                 showModalBottomSheet(
                     context: context,
                     builder: (context) {
-                      return StatefulBuilder(builder: (context, setStateModal) {
+                      return StatefulBuilder(builder: (context, setState) {
                         return FutureBuilder(
                             future: luongtuyenapi,
                             builder: (context, snapshot) {
@@ -345,8 +316,17 @@ class _LenhState extends State<LenhVanChuyen>
                                     luongtuyendata.data;
                                 listluongtuyen.insert(
                                     0,
-                                    DataLuongTuyen('sdsa', 'vb', 'vcc', 'Tất cả', 'cvc', 'vc',
-                                        0, 'vc', 'cv', 'cv'));
+                                    DataLuongTuyen(
+                                        '${widget.idlenh}',
+                                        'vb',
+                                        'vcc',
+                                        'Tất cả',
+                                        'cvc',
+                                        'vc',
+                                        0,
+                                        'vc',
+                                        'cv',
+                                        'cv'));
                                 return Container(
                                   padding: EdgeInsets.all(15),
                                   // height: 500,
@@ -405,10 +385,10 @@ class _LenhState extends State<LenhVanChuyen>
                                             style: TextStyle(
                                                 fontFamily: 'Roboto Regular',
                                                 fontSize: 14)),
-                                        value: 'Danh sách chuyến đi dự kiến',
+                                        value: trangthaifilter,
                                         onChanged: (t1) {
-                                          setStateModal(() {
-                                           trangthaifilter = t1;
+                                          setState(() {
+                                            trangthaifilter = t1;
                                           });
                                         },
                                         validator: (vl1) {
@@ -442,39 +422,26 @@ class _LenhState extends State<LenhVanChuyen>
                                                   FocusScope.of(context)
                                                       .requestFocus(
                                                           new FocusNode());
-                                                  tungay = await showDatePicker(
-                                                      context: context,
-                                                      initialDate: tungaytemp,
-                                                      firstDate: DateTime(1900),
-                                                      lastDate: DateTime(3000));
-                                                  if (tungay == null) {
+                                                  tungaytemp =
+                                                      await showDatePicker(
+                                                          context: context,
+                                                          initialDate:
+                                                              tungaytemp,
+                                                          firstDate:
+                                                              DateTime(1900),
+                                                          lastDate:
+                                                              DateTime(3000));
+                                                  if (tungaytemp == null) {
                                                     setState(() {
-                                                      tungay = tungaytemp;
+                                                      tungaytemp = tungay;
                                                     });
-                                                  } else {
-                                                    tungaytemp = tungay;
                                                   }
                                                   setState(() {
                                                     tungayController.text =
                                                         DateFormat('dd-MM-yyyy')
-                                                            .format(tungay);
+                                                            .format(tungaytemp);
                                                   });
                                                 },
-                                                // validator: (value) {
-                                                //   if (tungay.day < DateTime.now().day) {
-                                                //     checkError = true;
-
-                                                //     return 'Ký từ ngày không được nhỏ hơn ngày hiện tại';
-                                                //   } else if (tungay.day > denngay.day) {
-                                                //     checkError = true;
-
-                                                //     return 'Ký từ ngày không được nhỏ hơn Ký đến ngày';
-                                                //   } else {
-                                                //     checkError = false;
-
-                                                //     return null;
-                                                //   }
-                                                // },
                                               ),
                                               SizedBox(
                                                 height: 10,
@@ -496,7 +463,7 @@ class _LenhState extends State<LenhVanChuyen>
                                                   FocusScope.of(context)
                                                       .requestFocus(
                                                           new FocusNode());
-                                                  denngay =
+                                                  denngaytemp =
                                                       await showDatePicker(
                                                           context: context,
                                                           initialDate:
@@ -505,22 +472,35 @@ class _LenhState extends State<LenhVanChuyen>
                                                               DateTime(1900),
                                                           lastDate:
                                                               DateTime(3000));
-                                                  if (denngay == null) {
-                                                    denngay = denngaytemp;
-                                                  } else {
-                                                    denngaytemp = denngay;
+
+                                                  if (denngaytemp == null) {
+                                                    setState(
+                                                      () {
+                                                        denngaytemp = denngay;
+                                                      },
+                                                    );
                                                   }
                                                   setState(() {
                                                     denngayController.text =
                                                         DateFormat('dd-MM-yyyy')
-                                                            .format(denngay);
+                                                            .format(
+                                                                denngaytemp);
                                                   });
                                                 },
                                                 validator: (value) {
-                                                  if (denngay.day < tungay.day) {
+                                                  if (denngay.day <
+                                                          tungay.day &&
+                                                      denngay.month <
+                                                          tungay.month &&
+                                                      denngay.year <
+                                                          tungay.year) {
                                                     checkError = true;
 
                                                     return 'Ký đến ngày không được nhỏ hơn Ký từ ngày';
+                                                  } else if (daysBetween(
+                                                          tungay, denngay) >=
+                                                      31) {
+                                                    return 'Khoảng ngày chọn phải nhỏ hơn hơn 31';
                                                   } else {
                                                     checkError = false;
 
@@ -533,41 +513,49 @@ class _LenhState extends State<LenhVanChuyen>
                                       SizedBox(
                                         height: 10,
                                       ),
-                                      DropdownButtonFormField(
-                                        menuMaxHeight: 300,
-                                        decoration: InputDecoration(
-                                            labelText: 'Tuyến vận chuyển'),
-                                        items: listluongtuyen.map((text) {
-                                          return new DropdownMenuItem(
-                                            child: Container(
-                                                // width: 200,
-                                                child: Row(
-                                                  mainAxisSize: MainAxisSize.min,
-                                                  children: [
-                                                    Text('${text.tenTuyen}',
-                                                        style: TextStyle(
-                                                            fontSize: 14,fontFamily: 'Roboto Regular')),
-                                                  ],
-                                                )),
-                                            value: text.idDnvtTuyen,
-                                          );
-                                        }).toList(),
-                                        // value: 'Tất cả',
-                                        onChanged: (t1) {
-                                          setState(() {
-                                            // tinh = t1;
-                                          });
-                                        },
-                                        hint: Text('Chọn tuyến vận chuyển',
-                                            style: TextStyle(
-                                                fontFamily: 'Roboto Regular',
-                                                fontSize: 14)),
-                                        validator: (vl1) {
-                                          if (vl1 == null || vl1.isEmpty) {
-                                            return 'Chưa chọn trạng thái';
-                                          }
-                                          return null;
-                                        },
+                                      Form(
+                                        key: tuyenvanchuyenkey,
+                                        child: DropdownButtonFormField(
+                                          menuMaxHeight: 300,
+                                          decoration: InputDecoration(
+                                              labelText: 'Tuyến vận chuyển'),
+                                          items: listluongtuyen.map((text) {
+                                            return new DropdownMenuItem(
+                                              child: Container(
+                                                  // width: 200,
+                                                  child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Text('${text.tenTuyen}',
+                                                      style: TextStyle(
+                                                          fontSize: 14,
+                                                          fontFamily:
+                                                              'Roboto Regular')),
+                                                ],
+                                              )),
+                                              value: text.idDnvtTuyen,
+                                            );
+                                          }).toList(),
+                                          value: tuyenvanchuyenfilter,
+                                          onChanged: (t1) {
+                                            // setdstoNull();
+                                            setState(
+                                              () {
+                                                tuyenvanchuyenfilter = t1;
+                                              },
+                                            );
+                                          },
+                                          hint: Text('Chọn tuyến vận chuyển',
+                                              style: TextStyle(
+                                                  fontFamily: 'Roboto Regular',
+                                                  fontSize: 14)),
+                                          validator: (vl1) {
+                                            if (vl1 == null || vl1.isEmpty) {
+                                              return 'Chưa chọn tuyến vận chuyển';
+                                            }
+                                            return null;
+                                          },
+                                        ),
                                       ),
                                       SizedBox(
                                         height: 15,
@@ -596,14 +584,25 @@ class _LenhState extends State<LenhVanChuyen>
                                             ElevatedButton(
                                                 onPressed: !checkError
                                                     ? () {
-                                                      Navigator.pop(context);
-                                                        print(tungayController.text);
-                                                        print(denngayController.text);
-                                                        print(denngay.toUtc().toIso8601String());
-                                                        print(denngay);
-                                                        setState((){
-                                                          index = 1;
-                                                        });
+                                                        if (tuyenvanchuyenkey
+                                                            .currentState
+                                                            .validate()) {
+                                                          setdstoNull();
+                                                          Navigator.pop(
+                                                              context);
+                                                          setState(() {
+                                                            denngay =
+                                                                denngaytemp;
+                                                            tungay = tungaytemp;
+                                                            index = DSChuyenDi
+                                                                .indexWhere((element) =>
+                                                                    element
+                                                                        .title ==
+                                                                    trangthaifilter);
+                                                            loadds();
+                                                          });
+                                                          print(requestPayload);
+                                                        }
                                                       }
                                                     : null,
                                                 child: Text(
@@ -665,6 +664,7 @@ class _LenhState extends State<LenhVanChuyen>
                               });
                             }
                             loadds();
+                            print(requestPayload);
                           },
                           child: Container(
                               margin: EdgeInsets.only(right: 10, top: 10),
@@ -808,20 +808,26 @@ class _LenhState extends State<LenhVanChuyen>
                           print('chay qua day');
                           print(skip);
                           var alldata;
-                          List<KeHoach> listkehoachtemp = [];
-                          List<LenhDataDetail> listlenhtemp = [];
+                          // List<KeHoach> listkehoachtemp = [];
+                          // List<LenhDataDetail> listlenhtemp = [];
                           var seen = Set<String>();
 
                           if (index == 0) {
                             alldata = DanhSachKeHoach.fromJson(snapshot.data);
-                            listkehoachtemp.addAll(alldata.data.list);
-                            listkehoach = listkehoachtemp
-                                .where((element) => seen.add(element.iDKeHoach))
+                            listkehoach.addAll(alldata.data.list);
+                            for (int i = 0; i < listkehoach.length; i++) {
+                              listkehoach[i].filter =
+                                  listkehoach[i].idDnvtTuyen +
+                                      listkehoach[i].ngayDuong +
+                                      listkehoach[i].not;
+                            }
+                            listkehoach = listkehoach
+                                .where((element) => seen.add(element.filter))
                                 .toList();
                           } else {
                             alldata = dsLenh.fromJson(snapshot.data);
-                            listlenhtemp.addAll(alldata.data.list);
-                            listlenh = listlenhtemp
+                            listlenh.addAll(alldata.data.list);
+                            listlenh = listlenh
                                 .where(
                                     (element) => seen.add(element.idLenhDienTu))
                                 .toList();
@@ -837,75 +843,34 @@ class _LenhState extends State<LenhVanChuyen>
                             child: Column(
                               mainAxisSize: MainAxisSize.max,
                               children: [
-                                index == 0
-                                    ? ListView.builder(
-                                        key: const PageStorageKey<String>(
-                                            'page'),
-                                        // controller: _scrollController,
-                                        shrinkWrap: true,
-                                        physics: NeverScrollableScrollPhysics(),
-                                        itemCount: listkehoach.length,
-                                        itemBuilder: (context, inde) {
-                                          return itemChuyenDiDuKien(
-                                              listkehoach, inde);
-                                        })
-                                    : index == 1
-                                        ? ListView.builder(
-                                            shrinkWrap: true,
-                                            physics:
-                                                NeverScrollableScrollPhysics(),
-                                            itemCount: listlenh.length,
-                                            itemBuilder: (context, inde) {
-                                              return itemLenhDaCapChoLaiXe(
-                                                  listlenh, inde);
-                                            })
-                                        : index == 2
-                                            ? ListView.builder(
-                                                shrinkWrap: true,
-                                                physics:
-                                                    NeverScrollableScrollPhysics(),
-                                                itemCount: listlenh.length,
-                                                itemBuilder: (context, inde) {
-                                                  return itemLenhDangThucHien(
-                                                      listlenh, inde);
-                                                })
-                                            : index == 3
-                                                ? ListView.builder(
-                                                    shrinkWrap: true,
-                                                    physics:
-                                                        NeverScrollableScrollPhysics(),
-                                                    itemCount: listlenh.length,
-                                                    itemBuilder:
-                                                        (context, inde) {
-                                                      return itemLenhDangThucHien(
-                                                          listlenh, inde);
-                                                    })
-                                                : index == 4
-                                                    ? ListView.builder(
-                                                        shrinkWrap: true,
-                                                        physics:
-                                                            NeverScrollableScrollPhysics(),
-                                                        itemCount:
-                                                            listlenh.length,
-                                                        itemBuilder:
-                                                            (context, inde) {
-                                                          return itemLenhKhongHoanThanh(
-                                                              listlenh, inde);
-                                                        })
-                                                    : SizedBox(),
+                                checkwidget(index),
                                 alldata.data.list.length < 10
                                     ? SizedBox()
                                     : SizedBox(
                                         width: 150,
                                         child: ElevatedButton(
                                             onPressed: () {
+                                              _scrollController.addListener(
+                                                () {
+                                                  setState(() {
+                                                    currentScroll =
+                                                        _scrollController
+                                                            .position.pixels;
+                                                  });
+                                                },
+                                              );
                                               setState(() {
                                                 skip += 10;
                                                 loadds();
                                                 print(requestPayload);
                                               });
 
-                                              // _scrollController.
+                                              _scrollController.animateTo(
+                                                  _scrollController
+                                                      .position.maxScrollExtent,
+                                                  duration: Duration(
+                                                      milliseconds: 10),
+                                                  curve: Curves.easeOut);
                                             },
                                             child: Text('THÊM',
                                                 style: TextStyle(
@@ -974,6 +939,69 @@ class _LenhState extends State<LenhVanChuyen>
         ),
       ),
     );
+  }
+
+  checkwidget(int indx) {
+    switch (indx) {
+      case 0:
+        {
+        return  ListView.builder(
+              key: const PageStorageKey<String>('page'),
+              controller: _scrollController,
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              itemCount: listkehoach.length,
+              itemBuilder: (context, inde) {
+                return itemChuyenDiDuKien(listkehoach, inde);
+              });
+        }
+        break;
+
+      case 1:
+        {
+        return  ListView.builder(
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              itemCount: listlenh.length,
+              itemBuilder: (context, inde) {
+                return itemLenhDaCapChoLaiXe(listlenh, inde);
+              });
+        }
+        break;
+      case 2:
+        {
+        return  ListView.builder(
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              itemCount: listlenh.length,
+              itemBuilder: (context, inde) {
+                return itemLenhDangThucHien(listlenh, inde);
+              });
+        }
+        break;
+      case 3:
+        {
+        return  ListView.builder(
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              itemCount: listlenh.length,
+              itemBuilder: (context, inde) {
+                return itemLenhDangThucHien(listlenh, inde);
+              });
+        }
+        break;
+      case 4:
+        {
+        return  ListView.builder(
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              itemCount: listlenh.length,
+              itemBuilder: (context, inde) {
+                return itemLenhKhongHoanThanh(listlenh, inde);
+              });
+        }
+        break;
+    }
   }
 
   Container itemChuyenDiDuKien(
@@ -1113,7 +1141,7 @@ class _LenhState extends State<LenhVanChuyen>
                 InkWell(
                   onTap: () {
                     Navigator.push(context,
-                        MaterialPageRoute(builder: (context) => SuaKeHoach()));
+                    MaterialPageRoute(builder: (context) => SuaKeHoach(listdata[index].not,listdata[index].loTrinh,listdata[index].tenBenXeDi,listdata[index].iDKeHoach,tungay.toUtc().toIso8601String(),denngay.toUtc().toIso8601String())));
                   },
                   child: Container(
                     height: 40,
@@ -1134,7 +1162,7 @@ class _LenhState extends State<LenhVanChuyen>
                 InkWell(
                   onTap: () {
                     Navigator.push(context,
-                        MaterialPageRoute(builder: (context) => KiLenh()));
+                        MaterialPageRoute(builder: (context) => KiLenh(listdata[index].not,listdata[index].loTrinh,listdata[index].tenBenXeDi,listdata[index].iDKeHoach,tungay.toUtc().toIso8601String(),denngay.toUtc().toIso8601String())));
                   },
                   child: Container(
                     width: (size.width - 53) / 2,

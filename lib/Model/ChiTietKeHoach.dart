@@ -1,16 +1,21 @@
-class DanhSachKeHoach {
+class ChiTietKeHoach {
   bool status;
   String message;
   int errorCode;
-  Data data;
+  List<Data> data;
 
-  DanhSachKeHoach({this.status, this.message, this.errorCode, this.data});
+  ChiTietKeHoach({this.status, this.message, this.errorCode, this.data});
 
-  DanhSachKeHoach.fromJson(Map<String, dynamic> json) {
+  ChiTietKeHoach.fromJson(Map<String, dynamic> json) {
     status = json['status'];
     message = json['message'];
     errorCode = json['errorCode'];
-    data = json['data'] != null ? new Data.fromJson(json['data']) : null;
+    if (json['data'] != null) {
+      data = <Data>[];
+      json['data'].forEach((v) {
+        data.add(new Data.fromJson(v));
+      });
+    }
   }
 
   Map<String, dynamic> toJson() {
@@ -19,36 +24,13 @@ class DanhSachKeHoach {
     data['message'] = this.message;
     data['errorCode'] = this.errorCode;
     if (this.data != null) {
-      data['data'] = this.data.toJson();
+      data['data'] = this.data.map((v) => v.toJson()).toList();
     }
     return data;
   }
 }
 
 class Data {
-  List<KeHoach> list;
-
-  Data({this.list});
-
-  Data.fromJson(Map<String, dynamic> json) {
-    if (json['data'] != null) {
-      list = <KeHoach>[];
-      json['data'].forEach((v) {
-        list.add(new KeHoach.fromJson(v));
-      });
-    }
-  }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    if (list != null) {
-      data['data'] = list.map((v) => v.toJson()).toList();
-    }
-    return data;
-  }
-}
-
-class KeHoach {
   String iDKeHoach;
   String idDnvtTuyen;
   String idTuyen;
@@ -68,8 +50,8 @@ class KeHoach {
   XeThucHien xeThucHien;
   List<DanhSachLaiXeThucHien> danhSachLaiXeThucHien;
   String hoTenPhuXe;
-  String filter;
-  KeHoach(
+
+  Data(
       {this.iDKeHoach,
       this.idDnvtTuyen,
       this.idTuyen,
@@ -88,10 +70,9 @@ class KeHoach {
       this.ngayAm,
       this.xeThucHien,
       this.danhSachLaiXeThucHien,
-      this.hoTenPhuXe,
-      this.filter});
+      this.hoTenPhuXe});
 
-  KeHoach.fromJson(Map<String, dynamic> json) {
+  Data.fromJson(Map<String, dynamic> json) {
     iDKeHoach = json['ID_KeHoach'];
     idDnvtTuyen = json['IdDnvtTuyen'];
     idTuyen = json['IdTuyen'];
