@@ -1,3 +1,5 @@
+import 'package:slaixe2/Model/DSLaiXeDuKienTheoKeHoach.dart';
+
 class DanhSachKeHoach {
   bool status;
   String message;
@@ -66,7 +68,7 @@ class KeHoach {
   String bienSoXe;
   NgayAm ngayAm;
   XeThucHien xeThucHien;
-  List<DanhSachLaiXeThucHien> danhSachLaiXeThucHien;
+  List<ThongTinLaiXe> danhSachLaiXeThucHien;
   String hoTenPhuXe;
   String filter;
   KeHoach(
@@ -113,9 +115,9 @@ class KeHoach {
         ? new XeThucHien.fromJson(json['XeThucHien'])
         : null;
     if (json['DanhSachLaiXeThucHien'] != null) {
-      danhSachLaiXeThucHien = <DanhSachLaiXeThucHien>[];
+      danhSachLaiXeThucHien = <ThongTinLaiXe>[];
       json['DanhSachLaiXeThucHien'].forEach((v) {
-        danhSachLaiXeThucHien.add(new DanhSachLaiXeThucHien.fromJson(v));
+        danhSachLaiXeThucHien.add(new ThongTinLaiXe.fromJson(v));
       });
     }
     hoTenPhuXe = json['HoTenPhuXe'];
@@ -279,91 +281,4 @@ class XeThucHien {
   }
 }
 
-class DanhSachLaiXeThucHien {
-  String idDnvtLaiXeHoatDongTuyen;
-  String idDnvtLaiXe;
-  String idDnvtTuyen;
-  String ngayBatDau;
-  String ngayKetThuc;
-  String hdSo;
-  String hdNgayHieuLuc;
-  String hdNgayHetHan;
-  String hoTen;
-  String gplxMaSo;
-  String gplxHang;
-  String gplxNgayCap;
-  String gplxThoiHanHieuLuc;
-  String gplxNoiCap;
-  String gioiTinh;
-  String ngaySinh;
-  String dienThoai;
-  String diaChi;
-  int laiXeHoatDongTrenTuyen;
 
-  DanhSachLaiXeThucHien(
-      {this.idDnvtLaiXeHoatDongTuyen,
-      this.idDnvtLaiXe,
-      this.idDnvtTuyen,
-      this.ngayBatDau,
-      this.ngayKetThuc,
-      this.hdSo,
-      this.hdNgayHieuLuc,
-      this.hdNgayHetHan,
-      this.hoTen,
-      this.gplxMaSo,
-      this.gplxHang,
-      this.gplxNgayCap,
-      this.gplxThoiHanHieuLuc,
-      this.gplxNoiCap,
-      this.gioiTinh,
-      this.ngaySinh,
-      this.dienThoai,
-      this.diaChi,
-      this.laiXeHoatDongTrenTuyen});
-
-  DanhSachLaiXeThucHien.fromJson(Map<String, dynamic> json) {
-    idDnvtLaiXeHoatDongTuyen = json['IdDnvtLaiXeHoatDongTuyen'];
-    idDnvtLaiXe = json['IdDnvtLaiXe'];
-    idDnvtTuyen = json['IdDnvtTuyen'];
-    ngayBatDau = json['NgayBatDau'];
-    ngayKetThuc = json['NgayKetThuc'];
-    hdSo = json['HdSo'];
-    hdNgayHieuLuc = json['HdNgayHieuLuc'];
-    hdNgayHetHan = json['HdNgayHetHan'];
-    hoTen = json['HoTen'];
-    gplxMaSo = json['GplxMaSo'];
-    gplxHang = json['GplxHang'];
-    gplxNgayCap = json['GplxNgayCap'];
-    gplxThoiHanHieuLuc = json['GplxThoiHanHieuLuc'];
-    gplxNoiCap = json['GplxNoiCap'];
-    gioiTinh = json['GioiTinh'];
-    ngaySinh = json['NgaySinh'];
-    dienThoai = json['DienThoai'];
-    diaChi = json['DiaChi'];
-    laiXeHoatDongTrenTuyen = json['LaiXeHoatDongTrenTuyen'];
-  }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['IdDnvtLaiXeHoatDongTuyen'] = this.idDnvtLaiXeHoatDongTuyen;
-    data['IdDnvtLaiXe'] = this.idDnvtLaiXe;
-    data['IdDnvtTuyen'] = this.idDnvtTuyen;
-    data['NgayBatDau'] = this.ngayBatDau;
-    data['NgayKetThuc'] = this.ngayKetThuc;
-    data['HdSo'] = this.hdSo;
-    data['HdNgayHieuLuc'] = this.hdNgayHieuLuc;
-    data['HdNgayHetHan'] = this.hdNgayHetHan;
-    data['HoTen'] = this.hoTen;
-    data['GplxMaSo'] = this.gplxMaSo;
-    data['GplxHang'] = this.gplxHang;
-    data['GplxNgayCap'] = this.gplxNgayCap;
-    data['GplxThoiHanHieuLuc'] = this.gplxThoiHanHieuLuc;
-    data['GplxNoiCap'] = this.gplxNoiCap;
-    data['GioiTinh'] = this.gioiTinh;
-    data['NgaySinh'] = this.ngaySinh;
-    data['DienThoai'] = this.dienThoai;
-    data['DiaChi'] = this.diaChi;
-    data['LaiXeHoatDongTrenTuyen'] = this.laiXeHoatDongTrenTuyen;
-    return data;
-  }
-}

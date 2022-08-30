@@ -9,6 +9,7 @@ import 'package:loader_overlay/loader_overlay.dart';
 import 'package:slaixe2/components/itemListView.dart';
 import 'package:slaixe2/extensions/extensions.dart';
 import 'package:slaixe2/helpers/ApiHelper.dart';
+import 'package:slaixe2/lenh/LenhVanChuyen.dart';
 
 import '../Model/LenhHienTai.dart';
 import '../Routes.dart';
@@ -144,6 +145,7 @@ class HomeState extends State<Home> {
                   else if (snapshot.hasData) {
                      context.loaderOverlay.hide();
                      idlenh = snapshot.data.data.idLenh;
+                     storeIDlenh = idlenh;
                   if(!snapshot.data.status){
                     return customStatus(Text('Không có dữ liệu lệnh hiện tại !',
                       style: TextStyle(

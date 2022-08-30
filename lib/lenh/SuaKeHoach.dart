@@ -3,44 +3,53 @@ import 'package:flutter/src/foundation/key.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:http/http.dart';
-import 'package:multiselect/multiselect.dart';
-import 'package:slaixe2/Model/ChiTietKeHoach.dart';
+import 'package:loader_overlay/loader_overlay.dart';
+import 'package:multiselect_formfield/multiselect_formfield.dart';
+
 import 'package:slaixe2/Model/DSLaiXeDuKienTheoKeHoach.dart';
 import 'package:slaixe2/Model/DanhSachKeHoach.dart';
+import 'package:slaixe2/components/multiselectwithChip.dart';
 import 'package:slaixe2/extensions/extensions.dart';
 import 'package:slaixe2/helpers/ApiHelper.dart';
+import 'package:slaixe2/lenh/LenhVanChuyen.dart';
 import 'package:slaixe2/servicesAPI.dart';
-
+import '../Model/ChiTietKeHoach.dart';
 import '../Model/DSXeDuKienTheoKeHoach.dart';
 
 class SuaKeHoach extends StatefulWidget {
   SuaKeHoach(this.time, this.lotrinh, this.tenbenxedi, this.idkehoach,
-      this.tungay, this.denngay);
+      this.tungay, this.denngay, this.iddnvtxe, this.listdslaixe);
   String time;
   String lotrinh;
   String tenbenxedi;
   String idkehoach;
   String tungay;
   String denngay;
+  String iddnvtxe;
+
+  List<ThongTinLaiXe> listdslaixe;
   @override
   State<SuaKeHoach> createState() => _SuaKeHoachState();
 }
 
 class _SuaKeHoachState extends State<SuaKeHoach> {
-  final List<String> dsBienKiemSoat = ['20A-08124 (31/12/2025)'];
-  final List<String> dsLaiXe = ['Hà Thị Kim Chi'];
-  final List<String> dsLaiXeDiCung = ['Khánh Linh'];
-  final phuxeController = TextEditingController();
+  var phuxeController = TextEditingController();
   final laixetiepnhanlenhkey = GlobalKey<FormState>();
   final bienkiemsoatkey = GlobalKey<FormState>();
   DSXeDuKienTheoKeHoach datadsxedukientheokehoach;
   DSLaiXeDuKienTheoKeHoach datadslaixedukientheokehoach;
   ChiTietKeHoach datachitietkehoach;
-  List<String> selectedItem = [];
+  bool showList = false;
+  String iddnvtxe;
+  String laixechinh = '';
+
+  var postdata = null;
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+
     loadapi();
   }
 
@@ -54,8 +63,38 @@ class _SuaKeHoachState extends State<SuaKeHoach> {
             widget.tungay, widget.denngay, widget.idkehoach)));
   }
 
+  suakehoach(List<String> iddnvtlaixe) async {
+    postdata = await ApiHelper.post(apiSuaKeHoach.suakehoach, {
+      'HoTenPhuXe': phuxeController.text,
+      'IdDnvtLaiXes': iddnvtlaixe,
+      'IdDnvtXe': iddnvtxe,
+      'IdKeHoach': widget.idkehoach
+    });
+    return postdata;
+  }
+
+  int findIndex(ThongTinLaiXe e) {
+    return datadslaixedukientheokehoach.data
+        .indexWhere((element) => element.dienThoai == e.dienThoai);
+  }
+
+  void setInitValuePage(List<ThongTinLaiXe> list) {
+    if (widget.listdslaixe != null) {
+      if (widget.listdslaixe.length > 1) {
+        list.addAll(widget.listdslaixe.skip(1));
+        datadslaixedukientheokehoach
+            .data[findIndex(widget.listdslaixe[1])].check = true;
+        if (widget.listdslaixe.length == 3) {
+          datadslaixedukientheokehoach
+              .data[findIndex(widget.listdslaixe[2])].check = true;
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    Size size = MediaQuery.of(context).size;
     return Scaffold(
       appBar: AppBar(
         title: Text('SỬA KẾ HOẠCH',
@@ -64,171 +103,275 @@ class _SuaKeHoachState extends State<SuaKeHoach> {
             )),
         centerTitle: true,
       ),
-      body: FutureBuilder(
-        future: loadapi(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(
-              child: CircularProgressIndicator(),
-            );
-          } else if (datadsxedukientheokehoach.data != null &&
-              datadslaixedukientheokehoach != null &&
-              datachitietkehoach.data != null &&
-              datadsxedukientheokehoach.message == 'Thành công' &&
-              datadslaixedukientheokehoach.message == 'Thành công' &&
-              datachitietkehoach.message == 'Thành công') {
-            return Column(
-              // mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.max,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: EdgeInsets.all(10),
-                  child: Column(
-                    children: [
-                      RowTextItem(
-                          'asset/icons/road-variant.svg', 24, widget.lotrinh),
-                      SizedBox(
-                        height: 5,
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          RowTextItem('asset/icons/calendar.svg', 24,
-                              widget.time.substring(0, widget.time.length - 3)),
-                          SizedBox(
-                            width: 5,
-                          ),
-                          RowTextItem('asset/icons/bus-stop.svg', 24,
-                              widget.tenbenxedi),
-                        ],
-                      ),
-                      formsuakehoach(
-                          bienkiemsoatkey: bienkiemsoatkey,
-                          datadsxedukientheokehoach: datadsxedukientheokehoach,
-                          datadslaixedukientheokehoach:
-                              datadslaixedukientheokehoach),
-                      DropdownButtonFormField(
+      body: LoaderOverlay(
+        useDefaultLoading: false,
+        overlayOpacity: 0.6,
+        overlayWidget: Center(
+          child: CircularProgressIndicator(),
+        ),
+        child: FutureBuilder(
+          future: loadapi(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(
+                child: CircularProgressIndicator(),
+              );
+            } else if (datadsxedukientheokehoach.data != null &&
+                datadslaixedukientheokehoach != null &&
+                datachitietkehoach.data != null &&
+                datadsxedukientheokehoach.message == 'Thành công' &&
+                datadslaixedukientheokehoach.message == 'Thành công' &&
+                datachitietkehoach.message == 'Thành công') {
+              List<ThongTinLaiXe> selectedlaixedicung = [];
+
+              // List<ThongTinLaiXe> dslaixefordisplay =
+              //     datadslaixedukientheokehoach.data;
+
+              phuxeController = TextEditingController(
+                  text: datachitietkehoach.data.first.hoTenPhuXe == null
+                      ? ''
+                      : datachitietkehoach.data.first.hoTenPhuXe);
+              laixechinh = widget.listdslaixe == null
+                  ? null
+                  : widget.listdslaixe.first.idDnvtLaiXe;
+              List<ThongTinLaiXe> dslaixedicung = datadslaixedukientheokehoach
+                  .data
+                  .where((element) => element.idDnvtLaiXe != laixechinh)
+                  .toList();
+              setInitValuePage(selectedlaixedicung);
+              return Container(
+                padding: EdgeInsets.all(10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    RowTextItem(
+                        'asset/icons/road-variant.svg', 24, widget.lotrinh),
+                    SizedBox(
+                      height: 5,
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        RowTextItem('asset/icons/calendar.svg', 24,
+                            widget.time.substring(0, widget.time.length - 3)),
+                        SizedBox(
+                          width: 5,
+                        ),
+                        RowTextItem(
+                            'asset/icons/bus-stop.svg', 24, widget.tenbenxedi),
+                      ],
+                    ),
+                    Form(
+                      key: bienkiemsoatkey,
+                      child: DropdownButtonFormField(
                         decoration:
-                            InputDecoration(labelText: 'Lái xe đi cùng'),
-                        items: datadslaixedukientheokehoach.data.map((text) {
+                            InputDecoration(labelText: 'Biển kiểm soát(*)'),
+                        items: datadsxedukientheokehoach.data.map((text) {
+                          DateTime phuhieuhethan =
+                              DateTime.parse(text.phuHieuNgayHetHan).toLocal();
                           return new DropdownMenuItem(
-                            child:  Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Checkbox(
-                                      value: text.check, onChanged: (value) {}),
-                                  Container(
-                                      child: Text(text.hoTen,
-                                          style: TextStyle(
-                                              fontFamily: 'Roboto Regular',
-                                              fontSize: 16)))
-                                ],
-                              ),
-                       
-                            value: text.dienThoai,
+                            child: Container(
+                                child: Text(
+                                    '${text.bienKiemSoat} (${phuhieuhethan.day}/${phuhieuhethan.month}/${phuhieuhethan.year})',
+                                    style: TextStyle(
+                                        fontFamily: 'Roboto Regular',
+                                        fontSize: 16))),
+                            value: text.idDnvtXe,
                           );
                         }).toList(),
-                        // value: 'Bến xe Hà Nam',
+                        value: widget.iddnvtxe,
                         onChanged: (value) {
-                          // setState(() {
-                            // selectedItem.add(value);
-                          // });
+                          setState(() {
+                            iddnvtxe = value;
+                          });
                         },
-                        // selectedItemBuilder: (context) {
-                        //   return selectedItem
-                        //       .map((e) => Chip(
-                        //               label: Row(
-                        //             mainAxisSize: MainAxisSize.min,
-                        //             children: [
-                        //               Text(e),
-                        //               GestureDetector(
-                        //                 onTap: () {
-                        //                   setState(() {
-                        //                     // selectedItem.remove(e);
-                        //                   });
-                        //                 },
-                        //                 child: Container(
-                        //                     padding: EdgeInsets.all(1),
-                        //                     decoration: BoxDecoration(
-                        //                         shape: BoxShape.circle,
-                        //                         color: Colors.grey),
-                        //                     child: Icon(
-                        //                       Icons.close,
-                        //                       size: 15,
-                        //                       color: Colors.white,
-                        //                     )),
-                        //               )
-                        //             ],
-                        //           )))
-                        //       .toList();
-                        // },
-
-                        menuMaxHeight: 400,
-                      ),
-                      Form(
-                        // key: formkey,
-                        child: TextFormField(
-                          decoration: InputDecoration(labelText: 'Phụ xe'),
-                          controller: phuxeController,
-                          inputFormatters: [],
-                          validator: (value) {},
-                          onChanged: (value) {},
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Spacer(),
-                Divider(
-                  color: Colors.black54,
-                  thickness: 0.2,
-                ),
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 25),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      InkWell(
-                        onTap: () {
-                          Navigator.pop(context);
-                        },
-                        child: Text(
-                          'HỦY',
-                          style: TextStyle(
-                              fontFamily: 'Roboto Medium',
-                              fontSize: 14,
-                              letterSpacing: 1.25,
-                              color: HexColor.fromHex('#D10909')),
-                        ),
-                      ),
-                      ElevatedButton(
-                          onPressed: () {
-                            if (bienkiemsoatkey.currentState.validate() &&
-                                laixetiepnhanlenhkey.currentState.validate()) {}
-                          },
-                          child: Text(
-                            'XÁC NHẬN',
+                        hint: Text('Chọn biển kiểm soát',
                             style: TextStyle(
-                                fontFamily: 'Roboto Medium',
-                                fontSize: 14,
-                                letterSpacing: 1.25,
-                                color: Colors.white),
-                          ))
-                    ],
-                  ),
-                )
-              ],
-            );
-          }
+                                fontFamily: 'Roboto Regular', fontSize: 14)),
+                        menuMaxHeight: 200,
+                        validator: (vl1) {
+                          if (vl1 == null || vl1.isEmpty) {
+                            return 'Chưa chọn biển kiểm soát';
+                          }
+                          return null;
+                        },
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
+                      ),
+                    ),
+                    Expanded(
+                      child: StatefulBuilder(builder: (context, setState) {
+                        return Column(
+                          children: [
+                            Form(
+                              key: laixetiepnhanlenhkey,
+                              child: DropdownButtonFormField(
+                                decoration: InputDecoration(
+                                    labelText: 'Lái xe tiếp nhận lệnh(*)'),
+                                items: datadslaixedukientheokehoach.data
+                                    .map((text) {
+                                  return new DropdownMenuItem(
+                                    child: Container(
+                                        child: Text(text.hoTen,
+                                            style: TextStyle(
+                                                fontFamily: 'Roboto Regular',
+                                                fontSize: 16))),
+                                    value: text.idDnvtLaiXe,
+                                  );
+                                }).toList(),
+                                value: laixechinh == null ? null : laixechinh,
+                                onChanged: (value) {
+                                  print('change');
+                                  dslaixedicung = datadslaixedukientheokehoach
+                                      .data
+                                      .where((element) =>
+                                          element.idDnvtLaiXe != laixechinh)
+                                      .toList();
+                                  setState(() {
+                                    laixechinh = value;
+                                  });
+                                },
+                                hint: Text('Chọn lái xe',
+                                    style: TextStyle(
+                                        fontFamily: 'Roboto Regular',
+                                        fontSize: 14)),
+                                menuMaxHeight: 400,
+                                validator: (vl1) {
+                                  if (vl1 == null) {
+                                    return 'Chưa chọn lái xe tiếp nhận lệnh';
+                                  }
+                                  return null;
+                                },
+                                autovalidateMode:
+                                    AutovalidateMode.onUserInteraction,
+                              ),
+                            ),
+                            SizedBox(
+                              height: 10,
+                            ),
+                            multiselectwithChip(
+                              datadslaixedukientheokehoach.data,
+                              laixechinh,
+                              selectedlaixedicung,
+                              Form(
+                                // key: formkey,
+                                child: TextFormField(
+                                  decoration:
+                                      InputDecoration(labelText: 'Phụ xe'),
+                                  controller: phuxeController,
+                                  inputFormatters: [],
+                                  validator: (value) {},
+                                  onChanged: (value) {
+                                    print('aaaa');
+                                  },
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      }),
+                    ),
 
-          return Center(
-              child: Text(
-            'Không có dữ liệu',
-            style: TextStyle(fontFamily: 'Roboto Regular', fontSize: 14),
-          ));
-        },
+                    // Spacer(),
+                    Divider(
+                      color: Colors.black54,
+                      thickness: 0.2,
+                    ),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 25),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          InkWell(
+                            onTap: () {
+                              Navigator.pop(context);
+                            },
+                            child: Text(
+                              'HỦY',
+                              style: TextStyle(
+                                  fontFamily: 'Roboto Medium',
+                                  fontSize: 14,
+                                  letterSpacing: 1.25,
+                                  color: HexColor.fromHex('#D10909')),
+                            ),
+                          ),
+                          ElevatedButton(
+                              onPressed: () async {
+                                context.loaderOverlay.show();
+                                List<String> Iddnvtlaixe = selectedlaixedicung
+                                    .map((e) => e.idDnvtLaiXe)
+                                    .toList();
+                                Iddnvtlaixe.insert(0, laixechinh);
+
+                                if (bienkiemsoatkey.currentState.validate() &&
+                                    laixetiepnhanlenhkey.currentState
+                                        .validate()) {
+                                  var res = await suakehoach(Iddnvtlaixe);
+                                  if (res['message'] == 'Thành công') {
+                                    context.loaderOverlay.hide();
+                                    Navigator.pushReplacement(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                LenhVanChuyen(storeIDlenh)));
+                                  } else {
+                                    context.loaderOverlay.hide();
+                                    showDialog(
+                                      context: context,
+                                      barrierDismissible:
+                                          false, // user must tap button!
+                                      builder: (BuildContext context) {
+                                        return AlertDialog(
+                                          title: const Text('Lỗi',
+                                              style: TextStyle(
+                                                  fontFamily: 'Roboto Regular',
+                                                  fontSize: 18,
+                                                  color: Colors.red)),
+                                          content: Text(res['message'],
+                                              style: TextStyle(
+                                                  fontFamily: 'Roboto Regular',
+                                                  fontSize: 14)),
+                                          actions: <Widget>[
+                                            TextButton(
+                                              child: const Text('Đã hiểu',
+                                                  style: TextStyle(
+                                                      fontFamily:
+                                                          'Roboto Regular',
+                                                      fontSize: 14)),
+                                              onPressed: () {
+                                                Navigator.of(context).pop();
+                                              },
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    );
+                                  }
+                                }
+                              },
+                              child: Text(
+                                'XÁC NHẬN',
+                                style: TextStyle(
+                                    fontFamily: 'Roboto Medium',
+                                    fontSize: 14,
+                                    letterSpacing: 1.25,
+                                    color: Colors.white),
+                              ))
+                        ],
+                      ),
+                    )
+                  ],
+                ),
+              );
+            }
+
+            return Center(
+                child: Text(
+              'Không có dữ liệu',
+              style: TextStyle(fontFamily: 'Roboto Regular', fontSize: 14),
+            ));
+          },
+        ),
       ),
     );
   }
@@ -247,77 +390,5 @@ class _SuaKeHoachState extends State<SuaKeHoach> {
         )
       ],
     );
-  }
-}
-
-class formsuakehoach extends StatelessWidget {
-  const formsuakehoach({
-    Key key,
-    @required this.bienkiemsoatkey,
-    @required this.datadsxedukientheokehoach,
-    @required this.datadslaixedukientheokehoach,
-  }) : super(key: key);
-
-  final GlobalKey<FormState> bienkiemsoatkey;
-  final DSXeDuKienTheoKeHoach datadsxedukientheokehoach;
-  final DSLaiXeDuKienTheoKeHoach datadslaixedukientheokehoach;
-
-  @override
-  Widget build(BuildContext context) {
-    return Form(
-        key: bienkiemsoatkey,
-        child: Column(
-          children: [
-            DropdownButtonFormField(
-              decoration: InputDecoration(labelText: 'Biển kiểm soát(*)'),
-              items: datadsxedukientheokehoach.data.map((text) {
-                return new DropdownMenuItem(
-                  child: Container(
-                      child: Text(text.bienKiemSoat,
-                          style: TextStyle(
-                              fontFamily: 'Roboto Regular', fontSize: 16))),
-                  value: text.bienKiemSoat,
-                );
-              }).toList(),
-              // value: 'Bến xe Hà Nam',
-              onChanged: (value) {},
-              hint: Text('Chọn biển kiểm soát',
-                  style: TextStyle(fontFamily: 'Roboto Regular', fontSize: 14)),
-              menuMaxHeight: 200,
-              validator: (vl1) {
-                if (vl1 == null || vl1.isEmpty) {
-                  return 'Chưa chọn biển kiểm soát';
-                }
-                return null;
-              },
-              autovalidateMode: AutovalidateMode.onUserInteraction,
-            ),
-            DropdownButtonFormField(
-              decoration:
-                  InputDecoration(labelText: 'Lái xe tiếp nhận lệnh(*)'),
-              items: datadslaixedukientheokehoach.data.map((text) {
-                return new DropdownMenuItem(
-                  child: Container(
-                      child: Text(text.hoTen,
-                          style: TextStyle(
-                              fontFamily: 'Roboto Regular', fontSize: 16))),
-                  value: text.dienThoai,
-                );
-              }).toList(),
-              // value: 'Bến xe Hà Nam',
-              onChanged: (value) {},
-              hint: Text('Chọn lái xe',
-                  style: TextStyle(fontFamily: 'Roboto Regular', fontSize: 14)),
-              menuMaxHeight: 400,
-              validator: (vl1) {
-                if (vl1 == null) {
-                  return 'Chưa chọn lái xe tiếp nhận lệnh';
-                }
-                return null;
-              },
-              autovalidateMode: AutovalidateMode.onUserInteraction,
-            ),
-          ],
-        ));
   }
 }

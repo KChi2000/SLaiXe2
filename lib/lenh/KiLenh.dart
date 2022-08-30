@@ -28,7 +28,7 @@ class KiLenh extends StatefulWidget {
 class _KiLenhState extends State<KiLenh> {
   bool checkError = false;
   final formkey = GlobalKey<FormState>();
-  TimeOfDay time = TimeOfDay.now();
+  TimeOfDay time;
   TimeOfDay timetemp = TimeOfDay.now();
   final timeController = TextEditingController(
       text: '${TimeOfDay.now().hour}:${TimeOfDay.now().minute}');
@@ -61,6 +61,8 @@ class _KiLenhState extends State<KiLenh> {
   void initState() {
     // TODO: implement initState
     super.initState();
+    loadapi();
+    print(widget.time);
   }
  Future loadapi() async {
     datadsxedukientheokehoach = DSXeDuKienTheoKeHoach.fromJson(
@@ -93,6 +95,10 @@ class _KiLenhState extends State<KiLenh> {
               datadsxedukientheokehoach.message == 'Thành công' &&
               datadslaixedukientheokehoach.message == 'Thành công' &&
               datachitietkehoach.message == 'Thành công'){
+              time = TimeOfDay(hour: int.parse(widget.time.substring(0,1)), minute: int.parse(widget.time.substring(3,5)));
+              timeController.text = widget.time.substring(0,widget.time.length-3);
+              print(widget.time.substring(0,2));
+              print(time);
            return Column(
         children: [
           Expanded(
@@ -104,13 +110,14 @@ class _KiLenhState extends State<KiLenh> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     RowTextItem('asset/icons/road-variant.svg', 24,
-                        'TT TP. Thái Nguyên - Nam Hà Giang'),
+                        widget.lotrinh),
                     SizedBox(
                       height: 5,
                     ),
                     RowTextItem(
-                        'asset/icons/bus-stop.svg', 24, 'TT TP. Thái Nguyên'),
-                    TextFormField(
+                        'asset/icons/bus-stop.svg', 24, widget.tenbenxedi),
+                    StatefulBuilder(builder: (context,setState){
+                      return TextFormField(
                       controller: timeController,
                       decoration: InputDecoration(
                         isDense: true,
@@ -141,7 +148,8 @@ class _KiLenhState extends State<KiLenh> {
                           timeController.text = '${time.hour}:${time.minute}';
                         });
                       },
-                    ),
+                    );
+                    }),
                     DropdownButtonFormField(
                       decoration:
                           InputDecoration(labelText: 'Biển kiểm soát(*)'),

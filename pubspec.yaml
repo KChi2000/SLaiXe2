@@ -55,7 +55,7 @@ dependencies:
   time_span: ^2.0.2
   lottie: ^1.4.1
   loader_overlay: ^2.0.10
-  multiselect: ^0.0.7
+  multiselect_formfield: ^0.1.7
 dev_dependencies:
   flutter_test:
     sdk: flutter

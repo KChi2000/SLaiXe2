@@ -2,13 +2,13 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:intl/intl.dart';
-import 'package:slaixe2/InnerShadow.dart';
+
 import 'package:slaixe2/Model/DSChuyendi.dart';
 import 'package:slaixe2/Model/DSLenh.dart';
 import 'package:collection/collection.dart';
 import 'package:slaixe2/Model/DSLuongTuyen.dart';
 import 'package:slaixe2/Model/DanhSachKeHoach.dart';
-import 'package:slaixe2/Model/lenhModel.dart';
+
 import 'package:slaixe2/helpers/ApiHelper.dart';
 
 import 'package:slaixe2/lenh/KiLenh.dart';
@@ -17,7 +17,7 @@ import 'package:slaixe2/servicesAPI.dart';
 
 import '../components/itemListView.dart';
 import '../extensions/extensions.dart';
-
+String storeIDlenh='';
 class LenhVanChuyen extends StatefulWidget {
   String idlenh;
   LenhVanChuyen(this.idlenh);
@@ -72,11 +72,7 @@ class _LenhState extends State<LenhVanChuyen>
     DSChuyendi('Danh sách lệnh Đã hoàn thành', Colors.green),
     DSChuyendi('Danh sách lệnh Không hoàn thành', Colors.red),
   ];
-  final List<String> dsTuyenVanChuyen = [
-    'Tất cả',
-    'TT TP. Thái Nguyên - Nam Hà Giang',
-  ];
-
+  
   var dslistfuture;
   int skip = 0;
   String typeapi = '';
@@ -1141,7 +1137,7 @@ class _LenhState extends State<LenhVanChuyen>
                 InkWell(
                   onTap: () {
                     Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => SuaKeHoach(listdata[index].not,listdata[index].loTrinh,listdata[index].tenBenXeDi,listdata[index].iDKeHoach,tungay.toUtc().toIso8601String(),denngay.toUtc().toIso8601String())));
+                    MaterialPageRoute(builder: (context) => SuaKeHoach(listdata[index].not,listdata[index].loTrinh,listdata[index].tenBenXeDi,listdata[index].iDKeHoach,tungay.toUtc().toIso8601String(),denngay.toUtc().toIso8601String(),listdata[index].xeThucHien==null?'':listdata[index].xeThucHien.idDnvtXe,listdata[index].danhSachLaiXeThucHien)));
                   },
                   child: Container(
                     height: 40,

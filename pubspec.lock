@@ -160,11 +160,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.5.1"
-  flutter_localizations:
-    dependency: transitive
-    description: flutter
-    source: sdk
-    version: "0.0.0"
   flutter_masked_text:
     dependency: "direct main"
     description:
@@ -350,13 +345,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.7.0"
-  multiselect:
+  multiselect_formfield:
     dependency: "direct main"
     description:
-      name: multiselect
+      name: multiselect_formfield
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.0.7"
+    version: "0.1.7"
   path:
     dependency: transitive
     description:
@@ -558,13 +553,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.10.0"
-  states_rebuilder:
-    dependency: transitive
-    description:
-      name: states_rebuilder
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "6.1.0+1"
   stream_channel:
     dependency: transitive
     description:

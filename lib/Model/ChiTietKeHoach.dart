@@ -48,7 +48,7 @@ class Data {
   String bienSoXe;
   NgayAm ngayAm;
   XeThucHien xeThucHien;
-  List<DanhSachLaiXeThucHien> danhSachLaiXeThucHien;
+  List<DSLaiXeThucHien> danhSachLaiXeThucHien;
   String hoTenPhuXe;
 
   Data(
@@ -94,9 +94,9 @@ class Data {
         ? new XeThucHien.fromJson(json['XeThucHien'])
         : null;
     if (json['DanhSachLaiXeThucHien'] != null) {
-      danhSachLaiXeThucHien = <DanhSachLaiXeThucHien>[];
+      danhSachLaiXeThucHien = <DSLaiXeThucHien>[];
       json['DanhSachLaiXeThucHien'].forEach((v) {
-        danhSachLaiXeThucHien.add(new DanhSachLaiXeThucHien.fromJson(v));
+        danhSachLaiXeThucHien.add(new DSLaiXeThucHien.fromJson(v));
       });
     }
     hoTenPhuXe = json['HoTenPhuXe'];
@@ -260,7 +260,7 @@ class XeThucHien {
   }
 }
 
-class DanhSachLaiXeThucHien {
+class DSLaiXeThucHien {
   String idDnvtLaiXeHoatDongTuyen;
   String idDnvtLaiXe;
   String idDnvtTuyen;
@@ -281,7 +281,7 @@ class DanhSachLaiXeThucHien {
   String diaChi;
   int laiXeHoatDongTrenTuyen;
 
-  DanhSachLaiXeThucHien(
+  DSLaiXeThucHien(
       {this.idDnvtLaiXeHoatDongTuyen,
       this.idDnvtLaiXe,
       this.idDnvtTuyen,
@@ -302,7 +302,7 @@ class DanhSachLaiXeThucHien {
       this.diaChi,
       this.laiXeHoatDongTrenTuyen});
 
-  DanhSachLaiXeThucHien.fromJson(Map<String, dynamic> json) {
+  DSLaiXeThucHien.fromJson(Map<String, dynamic> json) {
     idDnvtLaiXeHoatDongTuyen = json['IdDnvtLaiXeHoatDongTuyen'];
     idDnvtLaiXe = json['IdDnvtLaiXe'];
     idDnvtTuyen = json['IdDnvtTuyen'];
