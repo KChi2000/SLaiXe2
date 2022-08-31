@@ -4,6 +4,7 @@ import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:intl/intl.dart';
 import 'package:slaixe2/Model/ChuyenDiTrongNgay.dart';
+import 'package:slaixe2/components/multiselectwithChip.dart';
 import 'package:slaixe2/servicesAPI.dart';
 import '../Model/ChiTietKeHoach.dart';
 import '../Model/DSLaiXeDuKienTheoKeHoach.dart';
@@ -12,67 +13,94 @@ import '../extensions/extensions.dart';
 import '../helpers/ApiHelper.dart';
 
 class KiLenh extends StatefulWidget {
-
- KiLenh(this.time, this.lotrinh, this.tenbenxedi, this.idkehoach,
-      this.tungay, this.denngay);
+  KiLenh(this.time, this.lotrinh, this.tenbenxedi, this.idkehoach,
+      this.iddnvtxe, this.listdslaixe);
   String time;
   String lotrinh;
   String tenbenxedi;
   String idkehoach;
-  String tungay;
-  String denngay;
+  // String tungay;
+  // String denngay;
+  String iddnvtxe;
+  List<ThongTinLaiXe> listdslaixe;
   @override
   State<KiLenh> createState() => _KiLenhState();
 }
 
 class _KiLenhState extends State<KiLenh> {
+  int numberdisplay = 10;
   bool checkError = false;
   final formkey = GlobalKey<FormState>();
   TimeOfDay time;
   TimeOfDay timetemp = TimeOfDay.now();
   final timeController = TextEditingController(
       text: '${TimeOfDay.now().hour}:${TimeOfDay.now().minute}');
-  final phuxeController = TextEditingController();
-  DateTime tungay = DateTime.now();
-  DateTime tungaytemp = DateTime.now();
+  var phuxeController = TextEditingController();
+  DateTime tungay =
+      DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+  DateTime tungaytemp =
+      DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
   final tungayController = TextEditingController(
       text: DateFormat('dd-MM-yyyy').format(DateTime.now()));
-  DateTime denngay = DateTime.now();
-  DateTime denngaytemp = DateTime.now();
+  DateTime denngay =
+      DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+  DateTime denngaytemp =
+      DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
   final denngayController = TextEditingController(
       text: DateFormat('dd-MM-yyyy').format(DateTime.now()));
-  final List<String> dsBienKiemSoat = ['20A-08124 (31/12/2025)'];
-  final List<String> dsLaiXe = ['Hà Thị Kim Chi'];
-  final List<String> dsLaiXeDiCung = ['Khánh Linh', 'Kim Yến'];
-  List<ChuyenDiTrongNgay> dsCDTrongNgay = [
-    ChuyenDiTrongNgay('Thứ 2', '15/09/2022', '18/7', false),
-    ChuyenDiTrongNgay('Thứ 3', '15/09/2022', '18/7', false),
-    ChuyenDiTrongNgay('Thứ 4', '15/09/2022', '18/7', false),
-    ChuyenDiTrongNgay('Thứ 4', '15/09/2022', '18/7', false),
-    ChuyenDiTrongNgay('Thứ 5', '15/09/2022', '18/7', false),
-    ChuyenDiTrongNgay('Thứ 6', '15/09/2022', '18/7', false),
-    ChuyenDiTrongNgay('Thứ 7', '15/09/2022', '18/7', false)
-  ];
-  List<ChuyenDiTrongNgay> listCDTemp = [];
+  String iddnvtxe;
+  final laixetiepnhanlenhkey = GlobalKey<FormState>();
+  final bienkiemsoatkey = GlobalKey<FormState>();
+
+  List<Data> listCDTemp = [];
   DSXeDuKienTheoKeHoach datadsxedukientheokehoach;
   DSLaiXeDuKienTheoKeHoach datadslaixedukientheokehoach;
   ChiTietKeHoach datachitietkehoach;
+  String laixechinh = '';
+  bool selectALl = false;
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    iddnvtxe = widget.iddnvtxe;
+
+    print(tungay.toUtc().toIso8601String());
     loadapi();
-    print(widget.time);
   }
- Future loadapi() async {
+
+  Future loadapi() async {
     datadsxedukientheokehoach = DSXeDuKienTheoKeHoach.fromJson(
         await ApiHelper.get(apiSuaKeHoach.apidsxedukien(widget.idkehoach)));
     datadslaixedukientheokehoach = DSLaiXeDuKienTheoKeHoach.fromJson(
         await ApiHelper.get(apiSuaKeHoach.apidslaixedukien(widget.idkehoach)));
-    datachitietkehoach = ChiTietKeHoach.fromJson(await ApiHelper.get(
-        apiSuaKeHoach.apidchitietkehoach(
-            widget.tungay, widget.denngay, widget.idkehoach)));
+    await loadchitietkehoach();
   }
+
+  Future loadchitietkehoach() async {
+    datachitietkehoach = ChiTietKeHoach.fromJson(await ApiHelper.get(
+        apiSuaKeHoach.apidchitietkehoach(tungay.toUtc().toIso8601String(),
+            denngay.toUtc().toIso8601String(), widget.idkehoach)));
+  }
+
+  int findIndex(ThongTinLaiXe e) {
+    return datadslaixedukientheokehoach.data
+        .indexWhere((element) => element.dienThoai == e.dienThoai);
+  }
+
+  void setInitValuePage(List<ThongTinLaiXe> list) {
+    if (widget.listdslaixe != null) {
+      if (widget.listdslaixe.length > 1) {
+        list.addAll(widget.listdslaixe.skip(1));
+        datadslaixedukientheokehoach
+            .data[findIndex(widget.listdslaixe[1])].check = true;
+        if (widget.listdslaixe.length == 3) {
+          datadslaixedukientheokehoach
+              .data[findIndex(widget.listdslaixe[2])].check = true;
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
@@ -84,329 +112,445 @@ class _KiLenhState extends State<KiLenh> {
             )),
         centerTitle: true,
       ),
-      body: FutureBuilder(future: loadapi(),builder: (context,snapshot){
-        if(snapshot.connectionState == ConnectionState.waiting){
-               return Center(
+      body: FutureBuilder(
+        future: loadapi(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(
               child: CircularProgressIndicator(),
             );
-        }else if(datadsxedukientheokehoach.data != null &&
+          } else if (datadsxedukientheokehoach.data != null &&
               datadslaixedukientheokehoach != null &&
               datachitietkehoach.data != null &&
               datadsxedukientheokehoach.message == 'Thành công' &&
               datadslaixedukientheokehoach.message == 'Thành công' &&
-              datachitietkehoach.message == 'Thành công'){
-              time = TimeOfDay(hour: int.parse(widget.time.substring(0,1)), minute: int.parse(widget.time.substring(3,5)));
-              timeController.text = widget.time.substring(0,widget.time.length-3);
-              print(widget.time.substring(0,2));
-              print(time);
-           return Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              child: Container(
-                padding: EdgeInsets.all(15),
-                width: size.width,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    RowTextItem('asset/icons/road-variant.svg', 24,
-                        widget.lotrinh),
-                    SizedBox(
-                      height: 5,
-                    ),
-                    RowTextItem(
-                        'asset/icons/bus-stop.svg', 24, widget.tenbenxedi),
-                    StatefulBuilder(builder: (context,setState){
-                      return TextFormField(
-                      controller: timeController,
-                      decoration: InputDecoration(
-                        isDense: true,
-                        labelText: 'Giờ xuất bến KH',
-                        suffixIcon: Icon(
-                          Icons.alarm,
-                          size: 24,
-                        ),
-                      ),
-                      onTap: () async {
-                        FocusScope.of(context).requestFocus(new FocusNode());
-                        time = await showTimePicker(
-                            context: context,
-                            initialTime: time,
-                            hourLabelText: 'Giờ',
-                            minuteLabelText: 'phút');
+              datachitietkehoach.message == 'Thành công') {
+            time = TimeOfDay(
+                hour: int.parse(widget.time.substring(0, 1)),
+                minute: int.parse(widget.time.substring(3, 5)));
+            timeController.text =
+                widget.time.substring(0, widget.time.length - 3);
+            phuxeController = TextEditingController(
+                text: datachitietkehoach.data.first.hoTenPhuXe == null
+                    ? ''
+                    : datachitietkehoach.data.first.hoTenPhuXe);
+            List<ThongTinLaiXe> selectedlaixedicung = [];
+            laixechinh = widget.listdslaixe == null
+                ? null
+                : widget.listdslaixe.first.idDnvtLaiXe;
 
-                        if (time == null) {
-                          setState(() {
-                            time = timetemp;
-                          });
-                        } else {
-                          setState(() {
-                            timetemp = time;
-                          });
-                        }
-                        setState(() {
-                          timeController.text = '${time.hour}:${time.minute}';
-                        });
-                      },
-                    );
-                    }),
-                    DropdownButtonFormField(
-                      decoration:
-                          InputDecoration(labelText: 'Biển kiểm soát(*)'),
-                      items: dsBienKiemSoat.map((String text) {
-                        return new DropdownMenuItem(
-                          child: Container(
-                              child: Text(text,
-                                  style: TextStyle(
-                                      fontFamily: 'Roboto Regular',
-                                      fontSize: 14))),
-                          value: text,
-                        );
-                      }).toList(),
-                      // value: 'Bến xe Hà Nam',
-                      onChanged: (value) {},
-                      hint: Text('Chọn biển kiểm soát',
-                          style: TextStyle(
-                              fontFamily: 'Roboto Regular', fontSize: 14)),
-                      menuMaxHeight: 200,
-                      validator: (vl1) {
-                        return null;
-                      },
-                    ),
-                    DropdownButtonFormField(
-                      decoration: InputDecoration(
-                          labelText: 'Lái xe tiếp nhận lệnh(*)'),
-                      items: dsLaiXe.map((String text) {
-                        return new DropdownMenuItem(
-                          child: Container(
-                              child: Text(text,
-                                  style: TextStyle(
-                                      fontFamily: 'Roboto Regular',
-                                      fontSize: 14))),
-                          value: text,
-                        );
-                      }).toList(),
-                      // value: 'Bến xe Hà Nam',
-                      onChanged: (value) {},
-                      hint: Text('Chọn lái xe',
-                          style: TextStyle(
-                              fontFamily: 'Roboto Regular', fontSize: 14)),
-                      menuMaxHeight: 200,
-                      validator: (vl1) {
-                        return null;
-                      },
-                    ),
-                    DropdownButtonFormField(
-                      decoration: InputDecoration(labelText: 'Lái xe đi cùng'),
-                      items: dsLaiXeDiCung.map((String text) {
-                        return new DropdownMenuItem(
-                          child: Container(
-                              child: Text(text,
-                                  style: TextStyle(
-                                      fontFamily: 'Roboto Regular',
-                                      fontSize: 16))),
-                          value: text,
-                        );
-                      }).toList(),
-                      // value: 'Bến xe Hà Nam',
-                      onChanged: (value) {},
-                      hint: Text('Lựa chọn...',
-                          style: TextStyle(
-                              fontFamily: 'Roboto Regular', fontSize: 14)),
-                      menuMaxHeight: 200,
-                      validator: (vl1) {},
-                    ),
-                    TextFormField(
-                      decoration: InputDecoration(labelText: 'Phụ xe'),
-                      controller: phuxeController,
-                      inputFormatters: [],
-                      onChanged: (value) {},
-                    ),
-                    Form(
-                        key: formkey,
-                        child: Column(
-                          children: [
-                            TextFormField(
-                              controller: tungayController,
+            List<ThongTinLaiXe> dslaixedicung = datadslaixedukientheokehoach
+                .data
+                .where((element) => element.idDnvtLaiXe != laixechinh)
+                .toList();
+
+            setInitValuePage(selectedlaixedicung);
+            return Column(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Container(
+                      padding: EdgeInsets.all(15),
+                      width: size.width,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          RowTextItem('asset/icons/road-variant.svg', 24,
+                              widget.lotrinh),
+                          SizedBox(
+                            height: 5,
+                          ),
+                          RowTextItem('asset/icons/bus-stop.svg', 24,
+                              widget.tenbenxedi),
+                          StatefulBuilder(builder: (context, setState) {
+                            return TextFormField(
+                              controller: timeController,
                               decoration: InputDecoration(
                                 isDense: true,
-                                labelText: 'Từ ngày(*)',
+                                labelText: 'Giờ xuất bến KH',
                                 suffixIcon: Icon(
-                                  Icons.calendar_month,
+                                  Icons.alarm,
                                   size: 24,
                                 ),
                               ),
-                              autovalidateMode:
-                                  AutovalidateMode.onUserInteraction,
                               onTap: () async {
                                 FocusScope.of(context)
                                     .requestFocus(new FocusNode());
-                                tungay = await showDatePicker(
+                                time = await showTimePicker(
                                     context: context,
-                                    initialDate: tungaytemp,
-                                    firstDate: DateTime(1900),
-                                    lastDate: DateTime(3000));
-                                if (tungay == null) {
+                                    initialTime: time,
+                                    hourLabelText: 'Giờ',
+                                    minuteLabelText: 'phút');
+
+                                if (time == null) {
                                   setState(() {
-                                    tungay = tungaytemp;
+                                    time = timetemp;
                                   });
                                 } else {
-                                  tungaytemp = tungay;
+                                  setState(() {
+                                    timetemp = time;
+                                  });
                                 }
                                 setState(() {
-                                  tungayController.text =
-                                      DateFormat('dd-MM-yyyy').format(tungay);
+                                  timeController.text =
+                                      '${time.hour}:${time.minute}';
                                 });
                               },
-                              validator: (value) {
-                                if (tungay.day < DateTime.now().day) {
-                                  checkError = true;
+                            );
+                          }),
+                          DropdownButtonFormField(
+                            decoration:
+                                InputDecoration(labelText: 'Biển kiểm soát(*)'),
+                            items: datadsxedukientheokehoach.data.map((text) {
+                              DateTime phuhieuhethan =
+                                  DateTime.parse(text.phuHieuNgayHetHan)
+                                      .toLocal();
+                              return new DropdownMenuItem(
+                                child: Container(
+                                    child: Text(
+                                        '${text.bienKiemSoat} (${phuhieuhethan.day}/${phuhieuhethan.month}/${phuhieuhethan.year})',
+                                        style: TextStyle(
+                                            fontFamily: 'Roboto Regular',
+                                            fontSize: 16))),
+                                value: text.idDnvtXe,
+                              );
+                            }).toList(),
+                            value: iddnvtxe == null ? null : iddnvtxe,
+                            onChanged: (value) {},
+                            hint: Text('Chọn biển kiểm soát',
+                                style: TextStyle(
+                                    fontFamily: 'Roboto Regular',
+                                    fontSize: 14)),
+                            menuMaxHeight: 200,
+                            validator: (vl1) {
+                              return null;
+                            },
+                          ),
+                          multiselectwithChip(
+                              datadslaixedukientheokehoach.data,
+                              laixechinh,
+                              selectedlaixedicung,
+                              Column(
+                                children: [
+                                  TextFormField(
+                                    decoration:
+                                        InputDecoration(labelText: 'Phụ xe'),
+                                    controller: phuxeController,
+                                    inputFormatters: [],
+                                    onChanged: (value) {},
+                                  ),
+                                  StatefulBuilder(builder: (context, setState) {
+                                    return Form(
+                                        key: formkey,
+                                        child: Column(
+                                          children: [
+                                            TextFormField(
+                                              controller: tungayController,
+                                              decoration: InputDecoration(
+                                                isDense: true,
+                                                labelText: 'Từ ngày(*)',
+                                                suffixIcon: Icon(
+                                                  Icons.calendar_month,
+                                                  size: 24,
+                                                ),
+                                              ),
+                                              autovalidateMode: AutovalidateMode
+                                                  .onUserInteraction,
+                                              onTap: () async {
+                                                FocusScope.of(context)
+                                                    .requestFocus(
+                                                        new FocusNode());
+                                                tungay = await showDatePicker(
+                                                    context: context,
+                                                    initialDate: tungaytemp,
+                                                    firstDate: DateTime(1900),
+                                                    lastDate: DateTime(3000));
+                                                if (tungay == null) {
+                                                  setState(() {
+                                                    tungay = tungaytemp;
+                                                  });
+                                                } else {
+                                                  tungaytemp = tungay;
+                                                }
+                                                setState(() {
+                                                  tungayController.text =
+                                                      DateFormat('dd-MM-yyyy')
+                                                          .format(tungay);
+                                                });
+                                                print(tungay
+                                                    .toUtc()
+                                                    .toIso8601String());
+                                              },
+                                              validator: (value) {
+                                                if (tungay.day <
+                                                    DateTime.now().day) {
+                                                  checkError = true;
 
-                                  return 'Ký từ ngày không được nhỏ hơn ngày hiện tại';
-                                } else if (tungay.day > denngay.day) {
-                                  checkError = true;
+                                                  return 'Ký từ ngày không được nhỏ hơn ngày hiện tại';
+                                                } else if (tungay.day >
+                                                    denngay.day) {
+                                                  checkError = true;
+                                                  return 'Ký từ ngày không được nhỏ hơn Ký đến ngày';
+                                                } else {
+                                                  checkError = false;
 
-                                  return 'Ký từ ngày không được nhỏ hơn Ký đến ngày';
-                                } else {
-                                  checkError = false;
+                                                  return null;
+                                                }
+                                              },
+                                            ),
+                                            TextFormField(
+                                                controller: denngayController,
+                                                decoration: InputDecoration(
+                                                  isDense: true,
+                                                  labelText: 'Đến ngày(*)',
+                                                  suffixIcon: Icon(
+                                                    Icons.calendar_month,
+                                                    size: 24,
+                                                  ),
+                                                ),
+                                                autovalidateMode:
+                                                    AutovalidateMode
+                                                        .onUserInteraction,
+                                                onTap: () async {
+                                                  FocusScope.of(context)
+                                                      .requestFocus(
+                                                          new FocusNode());
+                                                  denngay =
+                                                      await showDatePicker(
+                                                          context: context,
+                                                          initialDate:
+                                                              denngaytemp,
+                                                          firstDate:
+                                                              DateTime(1900),
+                                                          lastDate:
+                                                              DateTime(3000));
+                                                  if (denngay == null) {
+                                                    denngay = denngaytemp;
+                                                  } else {
+                                                    denngaytemp = denngay;
+                                                   
+                                                          loadchitietkehoach();
+                                                   
+                                                  }
+                                                  setState(() {
+                                                    denngayController.text =
+                                                        DateFormat('dd-MM-yyyy')
+                                                            .format(denngay);
+                                                  });
+                                                },
+                                                validator: (value) {
+                                                  if (denngay.day <
+                                                          tungay.day ||
+                                                      denngay.month <
+                                                          tungay.month ||
+                                                      denngay.year <
+                                                          tungay.year) {
+                                                    checkError = true;
 
-                                  return null;
-                                }
-                              },
-                            ),
-                            TextFormField(
-                              controller: denngayController,
-                              decoration: InputDecoration(
-                                isDense: true,
-                                labelText: 'Đến ngày(*)',
-                                suffixIcon: Icon(
-                                  Icons.calendar_month,
-                                  size: 24,
-                                ),
+                                                    return 'Ký đến ngày không được nhỏ hơn Ký từ ngày';
+                                                  } 
+                                                  else {
+                                                    checkError = false;
+
+                                                    return null;
+                                                  }
+                                                },
+                                              ),
+                                         
+                                          ],
+                                        ));
+                                  }),
+                                  SizedBox(
+                                    height: 15,
+                                  ),
+                                  Align(
+                                      alignment: Alignment.topLeft,
+                                      child: Text(
+                                          'Danh sách chuyến đi trong ngày',
+                                          style: TextStyle(
+                                              fontFamily: 'Roboto Medium',
+                                              fontSize: 14))),
+                                  SizedBox(
+                                    height: 10,
+                                  ),
+                                  FutureBuilder(
+                                      future: loadchitietkehoach(),
+                                      builder: (context, snapshot) {
+                                        if (snapshot.connectionState ==
+                                            ConnectionState.waiting) {
+                                          return CircularProgressIndicator();
+                                        } else if (datachitietkehoach.message ==
+                                                'Thành công' &&
+                                            datachitietkehoach.data != null) {
+                                          return StatefulBuilder(
+                                              builder: (context, setState) {
+                                            return Column(
+                                              children: [
+                                                Row(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.center,
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  children: [
+                                                    Checkbox(
+                                                        value: selectALl,
+                                                        onChanged: (value) {
+                                                          setState(() {
+                                                            selectALl = value;
+                                                            datachitietkehoach
+                                                                .data
+                                                                .forEach((element) =>
+                                                                    element.checked =
+                                                                        value);
+                                                            datachitietkehoach
+                                                                .data
+                                                                .forEach(
+                                                                    (element) {
+                                                              print(element
+                                                                  .checked
+                                                                  .toString());
+                                                            });
+                                                          });
+                                                        }),
+                                                    SizedBox(
+                                                      width: 5,
+                                                    ),
+                                                    Container(
+                                                        padding:
+                                                            EdgeInsets.all(10),
+                                                        width: size.width * 0.7,
+                                                        child: Text(
+                                                          'Tất cả',
+                                                          style: TextStyle(
+                                                              fontFamily:
+                                                                  'Roboto Regular',
+                                                              fontSize: 14),
+                                                        ))
+                                                  ],
+                                                ),
+                                                SizedBox(
+                                                    width: size.width * 0.7,
+                                                    child: Divider(
+                                                      color: Colors.grey,
+                                                    )),
+                                                ListView.builder(
+                                                    shrinkWrap: true,
+                                                    physics:
+                                                        NeverScrollableScrollPhysics(),
+                                                    itemCount: numberdisplay <=
+                                                            datachitietkehoach
+                                                                .data.length
+                                                        ? numberdisplay
+                                                        : datachitietkehoach
+                                                            .data.length,
+                                                    itemBuilder:
+                                                        (context, index) {
+                                                      return itemListCD(
+                                                          datachitietkehoach
+                                                              .data,
+                                                          index,
+                                                          size,
+                                                          setState);
+                                                    }),
+                                                numberdisplay <=
+                                                        datachitietkehoach
+                                                            .data.length
+                                                    ? SizedBox(
+                                                        width: 100,
+                                                        child: ElevatedButton(
+                                                          onPressed: () {
+                                                            setState(() {
+                                                              numberdisplay +=10;
+                                                            },);
+                                                          },
+                                                          child: Text(
+                                                            'THÊM',
+                                                            style: TextStyle(
+                                                                fontFamily:
+                                                                    'Roboto Medium',
+                                                                letterSpacing:
+                                                                    1.25,
+                                                                fontSize: 14),
+                                                          ),
+                                                        ),
+                                                      )
+                                                    : SizedBox()
+                                              ],
+                                            );
+                                          });
+                                        }
+                                        return Text('no more');
+                                      })
+                                ],
                               ),
-                              autovalidateMode:
-                                  AutovalidateMode.onUserInteraction,
-                              onTap: () async {
-                                FocusScope.of(context)
-                                    .requestFocus(new FocusNode());
-                                denngay = await showDatePicker(
-                                    context: context,
-                                    initialDate: denngaytemp,
-                                    firstDate: DateTime(1900),
-                                    lastDate: DateTime(3000));
-                                if (denngay == null) {
-                                  denngay = denngaytemp;
-                                } else {
-                                  denngaytemp = denngay;
-                                }
-                                setState(() {
-                                  denngayController.text =
-                                      DateFormat('dd-MM-yyyy').format(denngay);
-                                });
-                              },
-                              validator: (value) {
-                                if (denngay.day < tungay.day) {
-                                  checkError = true;
-
-                                  return 'Ký đến ngày không được nhỏ hơn Ký từ ngày';
-                                } else {
-                                  checkError = false;
-
-                                  return null;
-                                }
-                              },
-                            ),
-                          ],
-                        )),
-                    SizedBox(
-                      height: 15,
+                              laixetiepnhanlenhkey),
+                        ],
+                      ),
                     ),
-                    Align(
-                        alignment: Alignment.topLeft,
-                        child: Text('Danh sách chuyến đi trong ngày',
-                            style: TextStyle(
-                                fontFamily: 'Roboto Medium', fontSize: 14))),
-                    SizedBox(
-                      height: 10,
-                    ),
-                    StatefulBuilder(builder: (context,setState){
-                      return ListView.builder(
-                        shrinkWrap: true,
-                        physics: NeverScrollableScrollPhysics(),
-                        itemCount: dsCDTrongNgay.length,
-                        itemBuilder: (context, index) {
-                          return itemListCD(index, size,setState);
-                        });
-                    })
-                  ],
-                ),
-              ),
-            ),
-          ),
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 25),
-            decoration: BoxDecoration(
-                border: Border(
-                    top: BorderSide(
-                        width: 1, color: Colors.grey.withOpacity(0.3)))),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                InkWell(
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-                  child: Text(
-                    'HỦY',
-                    style: TextStyle(
-                        fontFamily: 'Roboto Medium',
-                        fontSize: 14,
-                        letterSpacing: 1.25,
-                        color: HexColor.fromHex('#D10909')),
                   ),
                 ),
-                ElevatedButton(
-                    onPressed: !checkError && listCDTemp.length != 0
-                        ? () {
-                            print(tungay.day < DateTime.now().day);
-                          }
-                        : null,
-                    child: Text(
-                      'KÝ LỆNH (${listCDTemp.length})',
-                      style: TextStyle(
-                          fontFamily: 'Roboto Medium',
-                          fontSize: 14,
-                          letterSpacing: 1.25,
-                          color: Colors.white),
-                    )),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 25),
+                  decoration: BoxDecoration(
+                      border: Border(
+                          top: BorderSide(
+                              width: 1, color: Colors.grey.withOpacity(0.3)))),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      InkWell(
+                        onTap: () {
+                          Navigator.pop(context);
+                        },
+                        child: Text(
+                          'HỦY',
+                          style: TextStyle(
+                              fontFamily: 'Roboto Medium',
+                              fontSize: 14,
+                              letterSpacing: 1.25,
+                              color: HexColor.fromHex('#D10909')),
+                        ),
+                      ),
+                      ElevatedButton(
+                          onPressed: listCDTemp.length != 0 ? () {} : null,
+                          child: Text(
+                            'KÝ LỆNH (${listCDTemp.length})',
+                            style: TextStyle(
+                                fontFamily: 'Roboto Medium',
+                                fontSize: 14,
+                                letterSpacing: 1.25,
+                                color: Colors.white),
+                          )),
+                    ],
+                  ),
+                )
               ],
-            ),
-          )
-        ],
-      );
-        }
-        return Center(
+            );
+          }
+          return Center(
               child: Text(
             'Không có dữ liệu',
             style: TextStyle(fontFamily: 'Roboto Regular', fontSize: 14),
           ));
-      },),
+        },
+      ),
     );
   }
 
-  Row itemListCD(int index, Size size,Function(void Function()) setState) {
+  Row itemListCD(List<Data> list, int index, Size size,
+      Function(void Function()) setState) {
+    var ngayduong = DateTime.parse(list[index].ngayDuong);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Checkbox(
-            value: dsCDTrongNgay[index].checked,
+            value: list[index].checked,
             onChanged: (value) {
               setState(() {
-                dsCDTrongNgay[index].checked = value;
-                listCDTemp = dsCDTrongNgay
-                    .where((element) => element.checked == true)
-                    .toList();
+                list[index].checked = value;
+                listCDTemp =
+                    list.where((element) => element.checked == true).toList();
               });
             }),
         SizedBox(
@@ -431,16 +575,46 @@ class _KiLenhState extends State<KiLenh> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               itemElement(
-                  '${dsCDTrongNgay[index].date}, ngày ${dsCDTrongNgay[index].fulldate}'),
+                  '${checkDayinWeek(list[index].ngayTrongTuan)}, ngày ${ngayduong.day}/${ngayduong.month}/${ngayduong.year}'),
               SizedBox(
                 height: 5,
               ),
-              itemElement('Lịch âm: ${dsCDTrongNgay[index].lunarCalendar}'),
+              itemElement(
+                  'Lịch âm: ${list[index].ngayAm.day}/${list[index].ngayAm.month}'),
             ],
           ),
         )
       ],
     );
+  }
+
+  checkDayinWeek(int num) {
+    switch (num) {
+      case 1:
+        return 'Thứ Hai';
+        break;
+      case 2:
+        return 'Thứ Ba';
+        break;
+      case 3:
+        return 'Thứ Tư';
+        break;
+      case 4:
+        return 'Thứ Năm';
+        break;
+      case 5:
+        return 'Thứ Sáu';
+        break;
+      case 6:
+        return 'Thứ Bảy';
+        break;
+      case 0:
+        return 'Chủ Nhật';
+        break;
+      default:
+        return 'unknown';
+        break;
+    }
   }
 
   Row itemElement(String title) {

@@ -1137,7 +1137,7 @@ class _LenhState extends State<LenhVanChuyen>
                 InkWell(
                   onTap: () {
                     Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => SuaKeHoach(listdata[index].not,listdata[index].loTrinh,listdata[index].tenBenXeDi,listdata[index].iDKeHoach,tungay.toUtc().toIso8601String(),denngay.toUtc().toIso8601String(),listdata[index].xeThucHien==null?'':listdata[index].xeThucHien.idDnvtXe,listdata[index].danhSachLaiXeThucHien)));
+                    MaterialPageRoute(builder: (context) => SuaKeHoach(listdata[index].not,listdata[index].loTrinh,listdata[index].tenBenXeDi,listdata[index].iDKeHoach,tungay.toUtc().toIso8601String(),denngay.toUtc().toIso8601String(),listdata[index].xeThucHien==null?null:listdata[index].xeThucHien.idDnvtXe,listdata[index].danhSachLaiXeThucHien)));
                   },
                   child: Container(
                     height: 40,
@@ -1157,8 +1157,10 @@ class _LenhState extends State<LenhVanChuyen>
                 ),
                 InkWell(
                   onTap: () {
+                    print(listdata[index].xeThucHien.idDnvtXe);
                     Navigator.push(context,
-                        MaterialPageRoute(builder: (context) => KiLenh(listdata[index].not,listdata[index].loTrinh,listdata[index].tenBenXeDi,listdata[index].iDKeHoach,tungay.toUtc().toIso8601String(),denngay.toUtc().toIso8601String())));
+                        MaterialPageRoute(builder: (context) => KiLenh(listdata[index].not,listdata[index].loTrinh,listdata[index].tenBenXeDi,listdata[index].iDKeHoach,listdata[index].xeThucHien==null?null:listdata[index].xeThucHien.idDnvtXe,listdata[index].danhSachLaiXeThucHien)));
+                      
                   },
                   child: Container(
                     width: (size.width - 53) / 2,

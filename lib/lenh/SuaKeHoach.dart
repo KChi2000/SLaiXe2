@@ -43,13 +43,11 @@ class _SuaKeHoachState extends State<SuaKeHoach> {
   String iddnvtxe;
   String laixechinh = '';
 
-  var postdata = null;
-
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-
+    iddnvtxe = widget.iddnvtxe;
     loadapi();
   }
 
@@ -64,7 +62,7 @@ class _SuaKeHoachState extends State<SuaKeHoach> {
   }
 
   suakehoach(List<String> iddnvtlaixe) async {
-    postdata = await ApiHelper.post(apiSuaKeHoach.suakehoach, {
+    var postdata = await ApiHelper.post(apiSuaKeHoach.suakehoach, {
       'HoTenPhuXe': phuxeController.text,
       'IdDnvtLaiXes': iddnvtlaixe,
       'IdDnvtXe': iddnvtxe,
@@ -124,9 +122,6 @@ class _SuaKeHoachState extends State<SuaKeHoach> {
                 datachitietkehoach.message == 'Thành công') {
               List<ThongTinLaiXe> selectedlaixedicung = [];
 
-              // List<ThongTinLaiXe> dslaixefordisplay =
-              //     datadslaixedukientheokehoach.data;
-
               phuxeController = TextEditingController(
                   text: datachitietkehoach.data.first.hoTenPhuXe == null
                       ? ''
@@ -138,6 +133,7 @@ class _SuaKeHoachState extends State<SuaKeHoach> {
                   .data
                   .where((element) => element.idDnvtLaiXe != laixechinh)
                   .toList();
+
               setInitValuePage(selectedlaixedicung);
               return Container(
                 padding: EdgeInsets.all(10),
@@ -162,114 +158,63 @@ class _SuaKeHoachState extends State<SuaKeHoach> {
                             'asset/icons/bus-stop.svg', 24, widget.tenbenxedi),
                       ],
                     ),
-                    Form(
-                      key: bienkiemsoatkey,
-                      child: DropdownButtonFormField(
-                        decoration:
-                            InputDecoration(labelText: 'Biển kiểm soát(*)'),
-                        items: datadsxedukientheokehoach.data.map((text) {
-                          DateTime phuhieuhethan =
-                              DateTime.parse(text.phuHieuNgayHetHan).toLocal();
-                          return new DropdownMenuItem(
-                            child: Container(
-                                child: Text(
-                                    '${text.bienKiemSoat} (${phuhieuhethan.day}/${phuhieuhethan.month}/${phuhieuhethan.year})',
-                                    style: TextStyle(
-                                        fontFamily: 'Roboto Regular',
-                                        fontSize: 16))),
-                            value: text.idDnvtXe,
-                          );
-                        }).toList(),
-                        value: widget.iddnvtxe,
-                        onChanged: (value) {
-                          setState(() {
-                            iddnvtxe = value;
-                          });
-                        },
-                        hint: Text('Chọn biển kiểm soát',
-                            style: TextStyle(
-                                fontFamily: 'Roboto Regular', fontSize: 14)),
-                        menuMaxHeight: 200,
-                        validator: (vl1) {
-                          if (vl1 == null || vl1.isEmpty) {
-                            return 'Chưa chọn biển kiểm soát';
-                          }
-                          return null;
-                        },
-                        autovalidateMode: AutovalidateMode.onUserInteraction,
-                      ),
-                    ),
+                    StatefulBuilder(builder: (context, setState) {
+                      return Form(
+                        key: bienkiemsoatkey,
+                        child: DropdownButtonFormField(
+                          decoration:
+                              InputDecoration(labelText: 'Biển kiểm soát(*)'),
+                          items: datadsxedukientheokehoach.data.map((text) {
+                            DateTime phuhieuhethan =
+                                DateTime.parse(text.phuHieuNgayHetHan)
+                                    .toLocal();
+                            return new DropdownMenuItem(
+                              child: Container(
+                                  child: Text(
+                                      '${text.bienKiemSoat} (${phuhieuhethan.day}/${phuhieuhethan.month}/${phuhieuhethan.year})',
+                                      style: TextStyle(
+                                          fontFamily: 'Roboto Regular',
+                                          fontSize: 16))),
+                              value: text.idDnvtXe,
+                            );
+                          }).toList(),
+                          value: iddnvtxe == null ? null : iddnvtxe,
+                          onChanged: (value) {
+                            setState(() {
+                              iddnvtxe = value;
+                            });
+                          },
+                          hint: Text('Chọn biển kiểm soát',
+                              style: TextStyle(
+                                  fontFamily: 'Roboto Regular', fontSize: 14)),
+                          menuMaxHeight: 200,
+                          validator: (vl1) {
+                            if (vl1 == null || vl1.isEmpty) {
+                              return 'Chưa chọn biển kiểm soát';
+                            }
+                            return null;
+                          },
+                          autovalidateMode: AutovalidateMode.onUserInteraction,
+                        ),
+                      );
+                    }),
+
                     Expanded(
-                      child: StatefulBuilder(builder: (context, setState) {
-                        return Column(
-                          children: [
-                            Form(
-                              key: laixetiepnhanlenhkey,
-                              child: DropdownButtonFormField(
-                                decoration: InputDecoration(
-                                    labelText: 'Lái xe tiếp nhận lệnh(*)'),
-                                items: datadslaixedukientheokehoach.data
-                                    .map((text) {
-                                  return new DropdownMenuItem(
-                                    child: Container(
-                                        child: Text(text.hoTen,
-                                            style: TextStyle(
-                                                fontFamily: 'Roboto Regular',
-                                                fontSize: 16))),
-                                    value: text.idDnvtLaiXe,
-                                  );
-                                }).toList(),
-                                value: laixechinh == null ? null : laixechinh,
-                                onChanged: (value) {
-                                  print('change');
-                                  dslaixedicung = datadslaixedukientheokehoach
-                                      .data
-                                      .where((element) =>
-                                          element.idDnvtLaiXe != laixechinh)
-                                      .toList();
-                                  setState(() {
-                                    laixechinh = value;
-                                  });
-                                },
-                                hint: Text('Chọn lái xe',
-                                    style: TextStyle(
-                                        fontFamily: 'Roboto Regular',
-                                        fontSize: 14)),
-                                menuMaxHeight: 400,
-                                validator: (vl1) {
-                                  if (vl1 == null) {
-                                    return 'Chưa chọn lái xe tiếp nhận lệnh';
-                                  }
-                                  return null;
-                                },
-                                autovalidateMode:
-                                    AutovalidateMode.onUserInteraction,
-                              ),
+                      child: multiselectwithChip(
+                          datadslaixedukientheokehoach.data,
+                          laixechinh,
+                          selectedlaixedicung,
+                         TextFormField(
+                              decoration: InputDecoration(labelText: 'Phụ xe'),
+                              controller: phuxeController,
+                              inputFormatters: [],
+                              validator: (value) {},
+                              onChanged: (value) {
+                                print('aaaa');
+                              },
                             ),
-                            SizedBox(
-                              height: 10,
-                            ),
-                            multiselectwithChip(
-                              datadslaixedukientheokehoach.data,
-                              laixechinh,
-                              selectedlaixedicung,
-                              Form(
-                                // key: formkey,
-                                child: TextFormField(
-                                  decoration:
-                                      InputDecoration(labelText: 'Phụ xe'),
-                                  controller: phuxeController,
-                                  inputFormatters: [],
-                                  validator: (value) {},
-                                  onChanged: (value) {
-                                    print('aaaa');
-                                  },
-                                ),
-                              ),
-                            ),
-                          ],
-                        );
-                      }),
+                         
+                          laixetiepnhanlenhkey),
                     ),
 
                     // Spacer(),
@@ -297,7 +242,7 @@ class _SuaKeHoachState extends State<SuaKeHoach> {
                           ),
                           ElevatedButton(
                               onPressed: () async {
-                                context.loaderOverlay.show();
+                                laixetiepnhanlenhkey.currentState.validate();
                                 List<String> Iddnvtlaixe = selectedlaixedicung
                                     .map((e) => e.idDnvtLaiXe)
                                     .toList();
@@ -306,6 +251,7 @@ class _SuaKeHoachState extends State<SuaKeHoach> {
                                 if (bienkiemsoatkey.currentState.validate() &&
                                     laixetiepnhanlenhkey.currentState
                                         .validate()) {
+                                  context.loaderOverlay.show();
                                   var res = await suakehoach(Iddnvtlaixe);
                                   if (res['message'] == 'Thành công') {
                                     context.loaderOverlay.hide();

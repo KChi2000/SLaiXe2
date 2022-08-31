@@ -8,8 +8,9 @@ class multiselectwithChip extends StatefulWidget {
   List<ThongTinLaiXe> datasource;
   List<ThongTinLaiXe> selectedlaixedicung;
   String laixechinh;
+  final laixetiepnhanlenhkey;
   multiselectwithChip(this.datasource, this.laixechinh,
-      this.selectedlaixedicung, this.stackheadchild);
+      this.selectedlaixedicung, this.stackheadchild, this.laixetiepnhanlenhkey);
   Widget stackheadchild;
   @override
   State<multiselectwithChip> createState() => _multiselectwithChipState();
@@ -18,25 +19,80 @@ class multiselectwithChip extends StatefulWidget {
 class _multiselectwithChipState extends State<multiselectwithChip> {
   var searchController = TextEditingController();
   var phuxeController = TextEditingController();
+
   List<ThongTinLaiXe> listfordisplay;
   bool showList = false;
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    
+    updatefilter();
   }
-  @override
-  Widget build(BuildContext context) {
-    Size size = MediaQuery.of(context).size;
+
+  Iterable<ThongTinLaiXe> filter() {
+    var filter = widget.datasource
+        .where((element) => element.idDnvtLaiXe != widget.laixechinh);
+    return filter;
+  }
+
+  updatefilter() {
     listfordisplay = widget.datasource
         .where((element) => element.idDnvtLaiXe != widget.laixechinh)
         .toList();
-    return Expanded(
-      child: Column(
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    Size size = MediaQuery.of(context).size;
+
+    return  Column(
         children: [
           Column(
             children: [
+              Form(
+                key: widget.laixetiepnhanlenhkey,
+                child: DropdownButtonFormField(
+                  decoration:
+                      InputDecoration(labelText: 'Lái xe tiếp nhận lệnh(*)'),
+                  items: widget.datasource.map((text) {
+                    return new DropdownMenuItem(
+                      child: Container(
+                          child: Text(text.hoTen,
+                              style: TextStyle(
+                                  fontFamily: 'Roboto Regular', fontSize: 16))),
+                      value: text.idDnvtLaiXe,
+                    );
+                  }).toList(),
+                  value: widget.laixechinh == null ? null : widget.laixechinh,
+                  onChanged: (value) {
+                    print('change');
+
+                    setState(() {
+                      widget.laixechinh = value;
+                      widget.selectedlaixedicung.removeWhere(
+                          (element) => element.idDnvtLaiXe == value);
+                      int ind = listfordisplay.indexWhere(
+                          (element) => element.idDnvtLaiXe == value);
+                      listfordisplay[ind].check = false;
+                      updatefilter();
+                    });
+                  },
+                  hint: Text('Chọn lái xe',
+                      style: TextStyle(
+                          fontFamily: 'Roboto Regular', fontSize: 14)),
+                  menuMaxHeight: 400,
+                  validator: (vl1) {
+                    if (vl1 == null) {
+                      return 'Chưa chọn lái xe tiếp nhận lệnh';
+                    }
+                    return null;
+                  },
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
+                ),
+              ),
+              SizedBox(
+                height: 10,
+              ),
               Align(
                 alignment: Alignment.topLeft,
                 child: Text(
@@ -72,12 +128,11 @@ class _multiselectwithChipState extends State<multiselectwithChip> {
                           print(searchController.text);
                           setState(
                             () {
-                              listfordisplay = widget.datasource
+                              listfordisplay = filter()
                                   .where((element) => element.hoTen
                                       .toLowerCase()
                                       .contains(value))
                                   .toList();
-                              print(listfordisplay.length);
                             },
                           );
                         }),
@@ -85,7 +140,7 @@ class _multiselectwithChipState extends State<multiselectwithChip> {
                   : GestureDetector(
                       onTap: () {
                         setState(() {
-                          print('tap from container selected');
+                        
                           showList = !showList;
                         });
                       },
@@ -114,7 +169,7 @@ class _multiselectwithChipState extends State<multiselectwithChip> {
                                             ),
                                           ),
                                           onDeleted: () {
-                                            print('delete');
+                                            
                                             setState(
                                               () {
                                                 widget.selectedlaixedicung
@@ -123,11 +178,10 @@ class _multiselectwithChipState extends State<multiselectwithChip> {
                                                     .indexWhere((element) =>
                                                         element.dienThoai ==
                                                         e.dienThoai);
-                                                print(ind);
+
                                                 widget.datasource[ind].check =
                                                     false;
-                                                listfordisplay =
-                                                    widget.datasource;
+                                                updatefilter();
                                               },
                                             );
                                           },
@@ -147,12 +201,11 @@ class _multiselectwithChipState extends State<multiselectwithChip> {
                                     onChanged: (value) {
                                       setState(
                                         () {
-                                          listfordisplay = widget.datasource
+                                          listfordisplay = filter()
                                               .where((element) => element.hoTen
                                                   .toLowerCase()
                                                   .contains(value))
                                               .toList();
-                                          print(listfordisplay.length);
                                         },
                                       );
                                     },
@@ -169,47 +222,73 @@ class _multiselectwithChipState extends State<multiselectwithChip> {
                     )
             ],
           ),
-          Expanded(
-            child: Stack(
-              children: [
-                widget.stackheadchild,
-                showList
-                    ? Positioned(
-                        child: listfordisplay.length == 0
-                            ? Container(
-                                height: 50,
-                                color: Colors.white,
-                                width: size.width,
-                                child: Center(
-                                  child: Text(
-                                    'Không có dữ liệu !',
-                                    style: TextStyle(
-                                        color: Colors.grey.withOpacity(0.8),
-                                        fontFamily: 'Roboto Regular',
-                                        fontSize: 14),
+       
+            Stack(
+                children: [
+                  widget.stackheadchild,
+                  showList
+                      ? Positioned(
+                          child: listfordisplay.length == 0
+                              ? Container(
+                                  height: 50,
+                                  color: Colors.white,
+                                  width: size.width,
+                                  child: Center(
+                                    child: Text(
+                                      'Không có dữ liệu !',
+                                      style: TextStyle(
+                                          color: Colors.grey.withOpacity(0.8),
+                                          fontFamily: 'Roboto Regular',
+                                          fontSize: 14),
+                                    ),
                                   ),
-                                ),
-                              )
-                            : Container(
-                                decoration: BoxDecoration(
-                                    border: Border.all(
-                                  color: Colors.grey.withOpacity(0.5),
-                                )),
-                                child: ListView.builder(
-                                    itemCount: listfordisplay.length,
-                                    shrinkWrap: true,
-                                    itemBuilder: (context, index) {
-                                      return GestureDetector(
-                                        onTap: () {
-                                          if (widget
-                                                  .selectedlaixedicung.length <
-                                              2) {
-                                            if (listfordisplay[index].check) {
+                                )
+                              : Container(
+                                height:  350,
+                                  decoration: BoxDecoration(
+                                   
+                                    //   border: Border.all(
+                                    // color: Colors.grey.withOpacity(0.5),
+                                  // )
+                                  ),
+                                  child: ListView.builder(
+                                      itemCount: listfordisplay.length,
+                                      shrinkWrap: true,
+                                      itemBuilder: (context, index) {
+                                        return GestureDetector(
+                                          onTap: () {
+                                            if (widget
+                                                    .selectedlaixedicung.length <
+                                                2) {
+                                              if (listfordisplay[index].check) {
+                                                setState(
+                                                  () {
+                                                    listfordisplay[index].check =
+                                                        false;
+
+                                                    widget.selectedlaixedicung
+                                                        .removeWhere((element) =>
+                                                            element.dienThoai ==
+                                                            listfordisplay[index]
+                                                                .dienThoai);
+                                                  },
+                                                );
+                                              } else {
+                                                setState(
+                                                  () {
+                                                    listfordisplay[index].check =
+                                                        true;
+                                                    widget.selectedlaixedicung
+                                                        .add(listfordisplay[
+                                                            index]);
+                                                  },
+                                                );
+                                              }
+                                            } else {
                                               setState(
                                                 () {
                                                   listfordisplay[index].check =
                                                       false;
-
                                                   widget.selectedlaixedicung
                                                       .removeWhere((element) =>
                                                           element.dienThoai ==
@@ -217,54 +296,60 @@ class _multiselectwithChipState extends State<multiselectwithChip> {
                                                               .dienThoai);
                                                 },
                                               );
-                                            } else {
-                                              setState(
-                                                () {
-                                                  listfordisplay[index].check =
-                                                      true;
-                                                  widget.selectedlaixedicung
-                                                      .add(listfordisplay[
-                                                          index]);
-                                                },
-                                              );
                                             }
-                                          } else {
-                                            setState(
-                                              () {
-                                                listfordisplay[index].check =
-                                                    false;
-                                                widget.selectedlaixedicung
-                                                    .removeWhere((element) =>
-                                                        element.dienThoai ==
-                                                        listfordisplay[index]
-                                                            .dienThoai);
-                                              },
-                                            );
-                                          }
-                                          listfordisplay = widget.datasource;
-                                          searchController =
-                                              TextEditingController(text: null);
-                                        },
-                                        child: Container(
-                                          color: Colors.white,
-                                          child: Row(
-                                            children: [
-                                              Checkbox(
-                                                  value: listfordisplay[index]
-                                                      .check,
-                                                  onChanged: (value) {
-                                                    if (widget
-                                                            .selectedlaixedicung
-                                                            .length <
-                                                        2) {
-                                                      if (listfordisplay[index]
-                                                          .check) {
+                                            updatefilter();
+                                            searchController =
+                                                TextEditingController(text: null);
+                                          },
+                                          child: Container(
+                                            color: Colors.grey[200],
+                                            child: Row(
+                                              children: [
+                                                Checkbox(
+                                                    value: listfordisplay[index]
+                                                        .check,
+                                                    onChanged: (value) {
+                                                      if (widget
+                                                              .selectedlaixedicung
+                                                              .length <
+                                                          2) {
+                                                        if (listfordisplay[index]
+                                                            .check) {
+                                                          setState(
+                                                            () {
+                                                              listfordisplay[
+                                                                      index]
+                                                                  .check = false;
+
+                                                              widget
+                                                                  .selectedlaixedicung
+                                                                  .removeWhere((element) =>
+                                                                      element
+                                                                          .dienThoai ==
+                                                                      listfordisplay[
+                                                                              index]
+                                                                          .dienThoai);
+                                                            },
+                                                          );
+                                                        } else {
+                                                          setState(
+                                                            () {
+                                                              listfordisplay[
+                                                                      index]
+                                                                  .check = true;
+                                                              widget
+                                                                  .selectedlaixedicung
+                                                                  .add(
+                                                                      listfordisplay[
+                                                                          index]);
+                                                            },
+                                                          );
+                                                        }
+                                                      } else {
                                                         setState(
                                                           () {
-                                                            listfordisplay[
-                                                                    index]
+                                                            listfordisplay[index]
                                                                 .check = false;
-
                                                             widget
                                                                 .selectedlaixedicung
                                                                 .removeWhere((element) =>
@@ -275,62 +360,34 @@ class _multiselectwithChipState extends State<multiselectwithChip> {
                                                                         .dienThoai);
                                                           },
                                                         );
-                                                      } else {
-                                                        setState(
-                                                          () {
-                                                            listfordisplay[
-                                                                    index]
-                                                                .check = true;
-                                                            widget
-                                                                .selectedlaixedicung
-                                                                .add(
-                                                                    listfordisplay[
-                                                                        index]);
-                                                          },
-                                                        );
                                                       }
-                                                    } else {
-                                                      setState(
-                                                        () {
-                                                          listfordisplay[index]
-                                                              .check = false;
-                                                          widget
-                                                              .selectedlaixedicung
-                                                              .removeWhere((element) =>
-                                                                  element
-                                                                      .dienThoai ==
-                                                                  listfordisplay[
-                                                                          index]
-                                                                      .dienThoai);
-                                                        },
-                                                      );
-                                                    }
-                                                    listfordisplay =
-                                                        widget.datasource;
-                                                    searchController =
-                                                        TextEditingController(
-                                                            text: null);
-                                                  }),
-                                              Text(
-                                                listfordisplay[index].hoTen,
-                                                style: TextStyle(
-                                                  fontFamily: 'Roboto Regular',
-                                                  fontSize: 14,
-                                                ),
-                                              )
-                                            ],
+                                                      listfordisplay =
+                                                          widget.datasource;
+                                                      searchController =
+                                                          TextEditingController(
+                                                              text: null);
+                                                    }),
+                                                Text(
+                                                  listfordisplay[index].hoTen,
+                                                  style: TextStyle(
+                                                    fontFamily: 'Roboto Regular',
+                                                    fontSize: 14,
+                                                  ),
+                                                )
+                                              ],
+                                            ),
                                           ),
-                                        ),
-                                      );
-                                    }),
-                              ),
-                      )
-                    : SizedBox(),
-              ],
-            ),
-          ),
+                                        );
+                                      }),
+                                ),
+                        )
+                      : SizedBox(),
+                ],
+              ),
+       
+         
         ],
-      ),
-    );
+      );
+   
   }
 }

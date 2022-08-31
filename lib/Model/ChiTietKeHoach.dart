@@ -50,7 +50,7 @@ class Data {
   XeThucHien xeThucHien;
   List<DSLaiXeThucHien> danhSachLaiXeThucHien;
   String hoTenPhuXe;
-
+  bool checked = false;
   Data(
       {this.iDKeHoach,
       this.idDnvtTuyen,
