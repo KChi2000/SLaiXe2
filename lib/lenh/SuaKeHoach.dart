@@ -8,6 +8,7 @@ import 'package:multiselect_formfield/multiselect_formfield.dart';
 
 import 'package:slaixe2/Model/DSLaiXeDuKienTheoKeHoach.dart';
 import 'package:slaixe2/Model/DanhSachKeHoach.dart';
+import 'package:slaixe2/Routes.dart';
 import 'package:slaixe2/components/multiselectwithChip.dart';
 import 'package:slaixe2/extensions/extensions.dart';
 import 'package:slaixe2/helpers/ApiHelper.dart';
@@ -230,6 +231,7 @@ class _SuaKeHoachState extends State<SuaKeHoach> {
                           InkWell(
                             onTap: () {
                               Navigator.pop(context);
+                            
                             },
                             child: Text(
                               'HỦY',
@@ -247,53 +249,49 @@ class _SuaKeHoachState extends State<SuaKeHoach> {
                                     .map((e) => e.idDnvtLaiXe)
                                     .toList();
                                 Iddnvtlaixe.insert(0, laixechinh);
-
-                                if (bienkiemsoatkey.currentState.validate() &&
-                                    laixetiepnhanlenhkey.currentState
-                                        .validate()) {
-                                  context.loaderOverlay.show();
-                                  var res = await suakehoach(Iddnvtlaixe);
-                                  if (res['message'] == 'Thành công') {
-                                    context.loaderOverlay.hide();
-                                    Navigator.pushReplacement(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (context) =>
-                                                LenhVanChuyen(storeIDlenh)));
-                                  } else {
-                                    context.loaderOverlay.hide();
-                                    showDialog(
-                                      context: context,
-                                      barrierDismissible:
-                                          false, // user must tap button!
-                                      builder: (BuildContext context) {
-                                        return AlertDialog(
-                                          title: const Text('Lỗi',
-                                              style: TextStyle(
-                                                  fontFamily: 'Roboto Regular',
-                                                  fontSize: 18,
-                                                  color: Colors.red)),
-                                          content: Text(res['message'],
-                                              style: TextStyle(
-                                                  fontFamily: 'Roboto Regular',
-                                                  fontSize: 14)),
-                                          actions: <Widget>[
-                                            TextButton(
-                                              child: const Text('Đã hiểu',
-                                                  style: TextStyle(
-                                                      fontFamily:
-                                                          'Roboto Regular',
-                                                      fontSize: 14)),
-                                              onPressed: () {
-                                                Navigator.of(context).pop();
-                                              },
-                                            ),
-                                          ],
-                                        );
-                                      },
-                                    );
-                                  }
-                                }
+                                print(laixechinh);
+                                // if (bienkiemsoatkey.currentState.validate() &&
+                                //     laixetiepnhanlenhkey.currentState
+                                //         .validate()) {
+                                //   context.loaderOverlay.show();
+                                //   var res = await suakehoach(Iddnvtlaixe);
+                                //   if (res['message'] == 'Thành công') {
+                                //     context.loaderOverlay.hide();
+                                //    Routes.navigatetoQuanLiLenh(context, storeIDlenh);
+                                //   } else {
+                                //     context.loaderOverlay.hide();
+                                //     showDialog(
+                                //       context: context,
+                                //       barrierDismissible:
+                                //           false, // user must tap button!
+                                //       builder: (BuildContext context) {
+                                //         return AlertDialog(
+                                //           title: const Text('Lỗi',
+                                //               style: TextStyle(
+                                //                   fontFamily: 'Roboto Regular',
+                                //                   fontSize: 18,
+                                //                   color: Colors.red)),
+                                //           content: Text(res['message'],
+                                //               style: TextStyle(
+                                //                   fontFamily: 'Roboto Regular',
+                                //                   fontSize: 14)),
+                                //           actions: <Widget>[
+                                //             TextButton(
+                                //               child: const Text('Đã hiểu',
+                                //                   style: TextStyle(
+                                //                       fontFamily:
+                                //                           'Roboto Regular',
+                                //                       fontSize: 14)),
+                                //               onPressed: () {
+                                //                 Navigator.of(context).pop();
+                                //               },
+                                //             ),
+                                //           ],
+                                //         );
+                                //       },
+                                //     );
+                                //   }
+                                // }
                               },
                               child: Text(
                                 'XÁC NHẬN',

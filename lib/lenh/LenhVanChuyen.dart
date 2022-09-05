@@ -1159,7 +1159,7 @@ class _LenhState extends State<LenhVanChuyen>
                   onTap: () {
                     print(listdata[index].xeThucHien.idDnvtXe);
                     Navigator.push(context,
-                        MaterialPageRoute(builder: (context) => KiLenh(listdata[index].not,listdata[index].loTrinh,listdata[index].tenBenXeDi,listdata[index].iDKeHoach,listdata[index].xeThucHien==null?null:listdata[index].xeThucHien.idDnvtXe,listdata[index].danhSachLaiXeThucHien)));
+                        MaterialPageRoute(builder: (context) => KiLenh(listdata[index].not,listdata[index].loTrinh,listdata[index].tenBenXeDi,listdata[index].iDKeHoach,listdata[index].xeThucHien==null?null:listdata[index].xeThucHien.idDnvtXe,listdata[index].danhSachLaiXeThucHien,listdata[index].idDnvtTuyen,listdata[index].idBenXeDen)));
                       
                   },
                   child: Container(

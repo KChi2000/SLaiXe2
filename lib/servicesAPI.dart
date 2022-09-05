@@ -70,3 +70,6 @@ class apiSuaKeHoach {
   static String suakehoach = backend_url +
         qllenhurl + 'Cap-Nhat-Ke-Hoach';
 }
+class kilenh{
+  static String url = backend_url+qllenhurl+'Tao-Va-Ky-Lenh';
+}
